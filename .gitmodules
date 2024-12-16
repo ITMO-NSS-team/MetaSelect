@@ -1,0 +1,3 @@
+[submodule "submodules/tabzilla"]
+	path = submodules/tabzilla
+	url = https://github.com/naszilla/tabzilla.git
