@@ -1,11 +1,11 @@
 import os
 
 from tqdm import tqdm
-from sb.tz_integration.datasets_parser import parse_datasets
+from ms.tz_integration.datasets_parser import parse_datasets
 
-from sb.utils.sb_utils import parse_sb_config, make_path
+from ms.utils.sb_utils import parse_sb_config, make_path
 from os.path import join as pjoin
-from sb.tz_integration.tz_calls import get_experiment_args, run_experiment
+from ms.tz_integration.tz_calls import get_experiment_args, run_experiment
 
 def run_all_experiments(models: list[str], datasets: list[str], use_gpu: bool = True):
     sb_config = parse_sb_config()

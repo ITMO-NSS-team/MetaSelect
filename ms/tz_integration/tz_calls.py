@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-import sb.tz_integration.tz_import as tz_import
+import ms.tz_integration.tz_import as tz_import
 
 tz_import.run()
 

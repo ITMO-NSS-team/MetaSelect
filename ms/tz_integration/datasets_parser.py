@@ -2,7 +2,7 @@ import json
 import os
 from os.path import join as pjoin
 
-from sb.utils.sb_utils import parse_sb_config, make_path
+from ms.utils.sb_utils import parse_sb_config, make_path
 
 
 def parse_datasets() -> dict:

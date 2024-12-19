@@ -1,8 +1,8 @@
 import pandas as pd
 
-from sb.meta_dataset.features_filter import FeaturesFilter
-from sb.meta_dataset.target_builder import TargetBuilder
-from sb.utils.sb_utils import pjoin
+from ms.meta_dataset.features_filter import FeaturesFilter
+from ms.meta_dataset.target_builder import TargetBuilder
+from ms.utils.sb_utils import pjoin
 
 
 class MetaDataset:

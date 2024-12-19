@@ -1,6 +1,6 @@
 from os.path import join as pjoin
 
-from sb.utils.sb_utils import make_path
+from ms.utils.sb_utils import make_path
 
 
 class SBConfig:
