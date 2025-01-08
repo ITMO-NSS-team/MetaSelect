@@ -77,11 +77,13 @@ class TabzillaFilter(MetadataFilter):
             ]
             agg_features = agg_features[filter_cols]
 
-        agg_features.drop(self.features_to_exclude, axis="columns", inplace=True)
-        agg_features.drop(self.datasets_to_exclude, axis="index", inplace=True)
+        if self.features_to_exclude is not None:
+            agg_features.drop(self.features_to_exclude, axis="columns", inplace=True)
+        if self.datasets_to_exclude is not None:
+            agg_features.drop(self.datasets_to_exclude, axis="index", inplace=True)
         if self.keys_to_exclude is not None:
             new_features = []
-            for f in agg_features.col:
+            for f in agg_features.columns:
                 is_included = True
                 for key in self.keys_to_exclude:
                     if key in f:
@@ -95,12 +97,14 @@ class TabzillaFilter(MetadataFilter):
 
     def filter_target(self, target_dataset: pd.DataFrame) -> pd.DataFrame:
         res_target = target_dataset.copy()
-        res_target.drop(self.models_to_exclude, axis="columns", inplace=True)
+        if self.models_to_exclude is not None:
+            res_target.drop(self.models_to_exclude, level=1, axis=0, inplace=True)
         priority_list = self.models_priority_list if self.models_priority_list is not None \
             else list(res_target.columns)
+        datasets = res_target.index.get_level_values(0).unique()
         for model in priority_list:
-            for row in res_target.index:
-                if np.isnan(res_target.loc[row, model]):
-                    res_target.drop(row, axis="rows", inplace=True)
+            for dataset_name in datasets:
+                if (dataset_name, model) not in res_target.index:
+                    res_target.drop(dataset_name, level=0, axis="rows", inplace=True)
 
         return res_target
