@@ -7,7 +7,7 @@ from matplotlib import pyplot as plt
 from sklearn.metrics import mean_squared_error
 
 def get_project_path() -> str:
-    return str(Path(__file__).parent.parent)
+    return str(Path(__file__).parent.parent.parent)
 
 def get_config_path() -> str:
     return pjoin(get_project_path(), "config")
