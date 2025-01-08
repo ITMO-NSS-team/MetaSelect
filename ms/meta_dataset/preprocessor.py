@@ -43,8 +43,8 @@ class PRELIM(Preprocessor):
             features: pd.DataFrame,
             target: pd.DataFrame
     ) -> tuple[pd.DataFrame, pd.DataFrame]:
-        y = target.copy()
-        x = features.copy()
+        y = target.copy().to_numpy()
+        x = features.copy().to_numpy()
         if self.perf_type == "rel":
             best_algo = np.max(np.where(np.isnan(y), -np.inf, y), axis=1)
             y[y == 0] = np.finfo(float).eps
@@ -60,10 +60,12 @@ class PRELIM(Preprocessor):
         x = np.where(lo_mask, params['lo_bound'][None, :], x)
 
         features_to_remove = []
+        features_names = []
         for i in range(x.shape[1]):
-            x = x[:, i]
-            if np.all(x == x[0]):
+            x_i = x[:, i]
+            if np.all(x_i == x_i[0]):
                 features_to_remove.append(i)
+                features_names.append(features.columns[i])
 
         x = np.delete(x, features_to_remove, axis=1)
 
@@ -79,19 +81,30 @@ class PRELIM(Preprocessor):
         x = x - params['min_x'][None, :] + 1
 
         for i in range(x.shape[1]):
-            feature = x[:, i]
-            idx = np.isnan(feature)
-            feature[~idx], params['lambda_x'][i] = boxcox(feature[~idx])
-            feature[~idx] = zscore(feature[~idx])
-            x[:, i] = feature
+            f = x[:, i]
+            idx = np.isnan(f)
+            f[~idx], params['lambda_x'][i] = boxcox(f[~idx])
+            f[~idx] = zscore(f[~idx])
+            x[:, i] = f
 
         y = y - params['min_y'] + np.finfo(float).eps
 
         for i in range(y.shape[1]):
-            target = y[:, i]
-            idx = np.isnan(target)
-            target[~idx], params['lambdaY'][i] = boxcox(target[~idx])
-            target[~idx] = zscore(target[~idx])
-            y[:, i] = target
+            t = y[:, i]
+            idx = np.isnan(t)
+            t[~idx], params['lambda_y'][i] = boxcox(t[~idx])
+            t[~idx] = zscore(t[~idx])
+            y[:, i] = t
 
-        return x, y
+        new_features = pd.DataFrame(
+            x,
+            columns=features.drop(features_names, axis=1, inplace=False).columns,
+            index=features.index
+        )
+        new_target = pd.DataFrame(
+            y,
+            columns=target.columns,
+            index=target.index
+        )
+
+        return new_features, new_target
