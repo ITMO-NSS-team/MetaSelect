@@ -31,7 +31,7 @@ class TargetType(ABC):
         target_cols = self.__get_col_names__(
             model_names=model_names
         )
-        return pd.DataFrame(target_array, columns=target_cols, index=model_results.index)
+        return pd.DataFrame(target_array, columns=target_cols, index=metric_results.index)
 
     def __get_metric__(
             self,
