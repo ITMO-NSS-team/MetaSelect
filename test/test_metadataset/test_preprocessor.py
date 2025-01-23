@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from ms.metadataset.metadata_preprocessor import PrelimPreprocessor
-from ms.metadataset.metadata_source import TabzillaSource
+from ms.handler.metadata_source import TabzillaSource
 
 def test_prelim_preprocessor():
 

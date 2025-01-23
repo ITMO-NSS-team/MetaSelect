@@ -2,8 +2,8 @@ from abc import ABC
 
 import pandas as pd
 
-from ms.metadataset.metadata_handler import FeaturesHandler, MetricsHandler
-from ms.metadataset.metadata_source import TabzillaSource
+from ms.handler.metadata_handler import FeaturesHandler, MetricsHandler
+from ms.handler.metadata_source import TabzillaSource
 
 
 class MetadataFormatter(FeaturesHandler, MetricsHandler, ABC):

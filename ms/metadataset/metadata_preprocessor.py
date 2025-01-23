@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 from scipy.stats import boxcox, zscore, iqr
 
-from ms.metadataset.metadata_handler import FeaturesHandler, MetricsHandler
-from ms.metadataset.metadata_source import MetadataSource
+from ms.handler.metadata_handler import FeaturesHandler, MetricsHandler
+from ms.handler.metadata_source import MetadataSource
 from ms.utils.typing import NDArrayFloatT
 
 

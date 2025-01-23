@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from ms.metadataset.metadata_source import TabzillaSource
+from ms.handler.metadata_source import TabzillaSource
 from ms.metadataset.target_builder import TargetPerfBuilder, TargetRawBuilder
 from ms.utils.calc_utils import AbsRangeStorage
 

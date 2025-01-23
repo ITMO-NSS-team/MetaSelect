@@ -3,8 +3,8 @@ from abc import abstractmethod, ABC
 
 import pandas as pd
 
-from ms.metadataset.metadata_config import MetadataConfig
-from ms.metadataset.metadata_source import SourceBased
+from ms.config.metadata_config import MetadataConfig
+from ms.handler.metadata_source import SourceBased
 from ms.utils.debug_utils import Debuggable
 from ms.utils.ms_utils import pjoin
 

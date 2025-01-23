@@ -3,8 +3,8 @@ from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
 
-from ms.metadataset.metadata_handler import MetricsHandler
-from ms.metadataset.metadata_source import MetadataSource
+from ms.handler.metadata_handler import MetricsHandler
+from ms.handler.metadata_source import MetadataSource
 from ms.utils.calc_utils import AbsRangeStorage
 from ms.utils.typing import NDArrayFloatT
 
