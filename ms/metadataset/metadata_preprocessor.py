@@ -1,15 +1,22 @@
 from abc import ABC
 
-import numpy as np
 import pandas as pd
-from scipy.stats import boxcox, zscore, iqr
+from sklearn.preprocessing import MinMaxScaler, StandardScaler, PowerTransformer, QuantileTransformer
 
+from ms.handler.handler_info import HandlerInfo
 from ms.handler.metadata_handler import FeaturesHandler, MetricsHandler
-from ms.handler.metadata_source import MetadataSource
-from ms.utils.typing import NDArrayFloatT
+from ms.handler.metadata_source import MetadataSource, TabzillaSource
+from ms.utils.metadata_utils import remove_constant_features
 
 
 class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
+    scalers = {
+        "standard": StandardScaler,
+        "minmax": MinMaxScaler,
+        "power": PowerTransformer,
+        "quantile": QuantileTransformer
+    }
+
     @property
     def class_name(self) -> str:
         return "preprocessor"
@@ -29,118 +36,135 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
             "metrics": True,
         }
 
+    @property
+    def handler_path(self) -> str:
+        return self.config.data_path
+
     def __init__(
             self,
             md_source: MetadataSource,
             features_folder: str = "filtered",
-            metrics_folder: str | None = "target_raw",
+            metrics_folder: str | None = "target",
+            to_scale: list[str] | None = None,
+            test_mode: bool = False,
     ):
         super().__init__(
             features_folder=features_folder,
             metrics_folder=metrics_folder,
+            test_mode=test_mode,
         )
         self._md_source = md_source
+        self.to_scale = to_scale if to_scale is not None else []
+        self.common_datasets = list[str] | None
+
+    def get_common_datasets(
+            self,
+            feature_suffix: str = None,
+            metrics_suffix: str = None
+    ) -> list[str]:
+        features_datasets = self.load_features(suffix=feature_suffix).index
+        metrics_datasets = self.load_metrics(suffix=metrics_suffix).index
+        return list(set(features_datasets) & set(metrics_datasets))
+
+    def preprocess(self, feature_suffix: str = None, metrics_suffix: str = None) \
+            -> tuple[pd.DataFrame, pd.DataFrame]:
+        self.common_datasets = self.get_common_datasets(
+            feature_suffix=feature_suffix,
+            metrics_suffix=metrics_suffix
+        )
+        features = self.handle_features(
+            load_suffix=feature_suffix,
+            save_suffix=None,
+            to_save=True
+        )
+        metrics = self.handle_metrics(
+            load_suffix=metrics_suffix,
+            save_suffix=metrics_suffix,
+            to_save=True
+        )
+
+        return features, metrics
 
 
-class PrelimPreprocessor(MetadataPreprocessor):
+class ScalePreprocessor(MetadataPreprocessor):
     def __init__(
             self,
             md_source: MetadataSource,
-            features_folder: str = "raw",
-            metrics_folder: str | None = "raw",
+            features_folder: str = "filtered",
+            metrics_folder: str | None = "target",
+            to_scale: list[str] | None = None,
             perf_type: str = "abs",  # or "rel"
+            remove_outliers: bool = False,
+            outlier_modifier: float = 1.0,
+            test_mode: bool = False,
     ):
         super().__init__(
             md_source=md_source,
             features_folder=features_folder,
             metrics_folder=metrics_folder,
+            to_scale=to_scale,
+            test_mode=test_mode,
         )
         self.parameters = {}
         self.perf_type = perf_type
+        self.remove_outliers = remove_outliers
+        self.outlier_modifier = outlier_modifier
 
-    def __handle_features__(self, features_dataset: pd.DataFrame) -> pd.DataFrame:
-        x = features_dataset.to_numpy(copy=True)
-        self.parameters['median'] = np.nanmedian(x, axis=0)
-        self.parameters['iq_range'] = iqr(x, axis=0, nan_policy='omit')
-        self.parameters['hi_bound'] = (self.parameters['median']
-                                       + 5 * self.parameters['iq_range'])
-        self.parameters['lo_bound'] = (self.parameters['median']
-                                       - 5 * self.parameters['iq_range'])
-        hi_mask = x > self.parameters['hi_bound'][None, :]
-        lo_mask = x < self.parameters['lo_bound'][None, :]
-        x = np.where(hi_mask, self.parameters['hi_bound'][None, :], x)
-        x = np.where(lo_mask, self.parameters['lo_bound'][None, :], x)
+    def __handle_features__(self, features_dataset: pd.DataFrame) -> tuple[pd.DataFrame, HandlerInfo]:
+        processed_dataset = features_dataset.copy()
+        processed_dataset = processed_dataset.loc[self.common_datasets].sort_index()
 
-        x, features_to_remove = self.__remove_constant_features__(
-            nd_array=x,
-            features_names=features_dataset.columns
+        if self.remove_outliers:
+            Q1 = processed_dataset.quantile(0.25, axis="index")
+            Q3 = processed_dataset.quantile(0.75, axis="index")
+            IQR = Q3 - Q1
+
+            lower = Q1 - self.outlier_modifier * IQR
+            upper = Q3 + self.outlier_modifier * IQR
+
+            for i, feature in enumerate(processed_dataset.columns):
+                feature_col = processed_dataset[feature]
+                feature_col[feature_col < lower[i]] = lower[i]
+                feature_col[feature_col > upper[i]] = upper[i]
+                processed_dataset[feature] = feature_col
+
+        scaled_values = processed_dataset.to_numpy(copy=True)
+        suffix = []
+        for scaler_name in self.to_scale:
+            scaled_values = self.scalers[scaler_name]().fit_transform(X=scaled_values)
+            suffix.append(scaler_name)
+        suffix = None if len(suffix) == 0 else "_".join(suffix)
+
+        res = pd.DataFrame(
+            scaled_values,
+            columns=processed_dataset.columns,
+            index=processed_dataset.index
         )
+        remove_constant_features(res)
 
-        self.parameters['min_x'] = np.nanmin(x, axis=0)
-        self.parameters['lambda_x'] = np.zeros(x.shape[1])
-        self.parameters['mu_x'] = np.zeros(x.shape[1])
-        self.parameters['sigma_x'] = np.zeros(x.shape[1])
+        handler_info = HandlerInfo(suffix=suffix)
 
-        x = x - self.parameters['min_x'][None, :] + 1
-
-        for i in range(x.shape[1]):
-            f = x[:, i]
-            idx = np.isnan(f)
-            f[~idx], self.parameters['lambda_x'][i] = boxcox(f[~idx])
-            f[~idx] = zscore(f[~idx])
-            x[:, i] = f
-
-        new_features = pd.DataFrame(
-            x,
-            columns=features_dataset.drop(
-                features_to_remove, axis=1, inplace=False
-            ).columns,
-            index=features_dataset.index
-        )
-
-        return new_features
+        return res, handler_info
 
     def __handle_metrics__(self, metrics_dataset: pd.DataFrame) -> pd.DataFrame:
-        y = metrics_dataset.copy().to_numpy()
-        if self.perf_type == "rel":
-            best_algo = np.max(np.where(np.isnan(y), -np.inf, y), axis=1)
-            y[y == 0] = np.finfo(float).eps
-            y = 1 - (y / best_algo[:, None])
+        new_metrics_dataset = metrics_dataset.loc[self.common_datasets].sort_index()
+        return new_metrics_dataset, HandlerInfo()
 
-        self.parameters['min_y'] = np.nanmin(y)
-        self.parameters['lambda_y'] = np.zeros(y.shape[1])
-        self.parameters['mu_y'] = np.zeros(y.shape[1])
-        self.parameters['sigma_y'] = np.zeros(y.shape[1])
 
-        y = y - self.parameters['min_y'] + np.finfo(float).eps
-
-        for i in range(y.shape[1]):
-            t = y[:, i]
-            idx = np.isnan(t)
-            t[~idx], self.parameters['lambda_y'][i] = boxcox(t[~idx])
-            t[~idx] = zscore(t[~idx])
-            y[:, i] = t
-
-        new_target = pd.DataFrame(
-            y,
-            columns=metrics_dataset.columns,
-            index=metrics_dataset.index
-        )
-
-        return new_target
-
-    @staticmethod
-    def __remove_constant_features__(
-            nd_array: NDArrayFloatT,
-            features_names: list[str],
-    ) -> tuple[NDArrayFloatT, list[str]]:
-        indexes_to_remove = []
-        features_to_remove = []
-        for i in range(nd_array.shape[1]):
-            x_i = nd_array[:, i]
-            if np.all(x_i == x_i[0]):
-                indexes_to_remove.append(i)
-                features_to_remove.append(features_names[i])
-
-        return (np.delete(nd_array, indexes_to_remove, axis=1),
-                features_to_remove)
+if __name__ == "__main__":
+    preprocessor = ScalePreprocessor(
+        md_source=TabzillaSource(),
+        features_folder="filtered",
+        metrics_folder="target",
+        to_scale=["power"],
+        perf_type="abs",
+        remove_outliers=False,
+        outlier_modifier=1.5,
+        test_mode=False,
+    )
+    features, metrics = preprocessor.preprocess(
+        feature_suffix=None,
+        metrics_suffix="perf_abs"
+    )
+    print(features.shape)
+    print(metrics.shape)

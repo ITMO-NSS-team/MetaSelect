@@ -2,8 +2,8 @@ from abc import ABC
 
 
 class Debuggable(ABC):
-    def __init__(self):
-        self._test_mode = False
+    def __init__(self, test_mode: bool = False):
+        self._test_mode = test_mode
 
     @property
     def test_mode(self) -> bool:

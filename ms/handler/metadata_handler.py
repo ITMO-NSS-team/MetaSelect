@@ -4,6 +4,7 @@ from abc import abstractmethod, ABC
 import pandas as pd
 
 from ms.config.metadata_config import MetadataConfig
+from ms.handler.handler_info import HandlerInfo
 from ms.handler.metadata_source import SourceBased
 from ms.utils.debug_utils import Debuggable
 from ms.utils.ms_utils import pjoin
@@ -14,8 +15,11 @@ class MetadataHandler(SourceBased, Debuggable, ABC):
             self,
             features_folder: str,
             metrics_folder: str | None = None,
+            test_mode: bool = False,
     ):
-        super().__init__()
+        super().__init__(
+            test_mode=test_mode,
+        )
         self._config = MetadataConfig()
 
         if metrics_folder is None:
@@ -48,6 +52,11 @@ class MetadataHandler(SourceBased, Debuggable, ABC):
     def has_index(self) -> dict[str, bool]:
         pass
 
+    @property
+    @abstractmethod
+    def handler_path(self) -> str:
+        pass
+
     def load(
             self,
             folder_name: str,
@@ -74,7 +83,7 @@ class MetadataHandler(SourceBased, Debuggable, ABC):
             file_name: str
     ) -> str:
         save_path = pjoin(
-            self.config.data_path,
+            self.handler_path,
             self.source.name,
             folder_name,
         )
@@ -92,45 +101,107 @@ class MetadataHandler(SourceBased, Debuggable, ABC):
         )
         return save_path
 
+    @staticmethod
+    def get_file_name(prefix: str, suffix: str | None = None):
+        if suffix is not None:
+            res = f"{prefix}__{suffix}.csv"
+        else:
+            res = f"{prefix}.csv"
+        return res
+
 
 class FeaturesHandler(MetadataHandler):
 
-    def handle_features(self) -> str:
-        features_dataset = self.load(
-            folder_name=self.get_name(name=self.data_folder["features"]),
-            file_name=self.config.features_name,
-            get_index=self.has_index["features"],
-        )
-        features_handled = self.__handle_features__(
+    def handle_features(
+            self,
+            load_suffix: str | None = None,
+            save_suffix: str | None = None,
+            to_save: bool = True
+    ) -> pd.DataFrame:
+        features_dataset = self.load_features(suffix=load_suffix)
+        features_handled, handler_info = self.__handle_features__(
             features_dataset=features_dataset
         )
+        if to_save:
+            self.save_features(
+                features_handled=features_handled,
+                suffix=handler_info.info["suffix"] if save_suffix is None else save_suffix,
+            )
+        return features_handled
+
+    def load_features(self, suffix: str | None = None) -> pd.DataFrame:
+        features_dataset = self.load(
+            folder_name=self.get_name(name=self.data_folder["features"]),
+            file_name=self.get_file_name(
+                prefix=self.config.features_prefix,
+                suffix=suffix
+            ),
+            get_index=self.has_index["features"],
+        )
+        return features_dataset
+
+    def save_features(
+            self,
+            features_handled: pd.DataFrame,
+            suffix: str | None = None,
+    ) -> str:
         return self.save(
             data_frame=features_handled,
             folder_name=self.get_name(name=self.class_folder),
-            file_name=self.config.features_name
+            file_name=self.get_file_name(
+                prefix=self.config.features_prefix,
+                suffix=suffix
+            ),
         )
 
     @abstractmethod
-    def __handle_features__(self, features_dataset: pd.DataFrame) -> pd.DataFrame:
+    def __handle_features__(self, features_dataset: pd.DataFrame) -> tuple[pd.DataFrame, HandlerInfo]:
         pass
 
 class MetricsHandler(MetadataHandler):
 
-    def handle_metrics(self) -> str:
-        metrics_dataset = self.load(
-            folder_name=self.get_name(name=self.data_folder["metrics"]),
-            file_name=self.config.metrics_name,
-            get_index=self.has_index["metrics"],
-        )
-        metrics_handled = self.__handle_metrics__(
+    def handle_metrics(
+            self,
+            load_suffix: str | None = None,
+            save_suffix: str | None = None,
+            to_save: bool = True
+    ) -> pd.DataFrame:
+        metrics_dataset = self.load_metrics(suffix=load_suffix)
+        metrics_handled, handler_info = self.__handle_metrics__(
             metrics_dataset=metrics_dataset
         )
+        if to_save:
+            self.save_metrics(
+                metrics_handled=metrics_handled,
+                suffix=handler_info.info["suffix"] if save_suffix is None else save_suffix,
+            )
+        return metrics_handled
+
+    def load_metrics(self, suffix: str | None = None) -> pd.DataFrame:
+        metrics_dataset = self.load(
+            folder_name=self.get_name(name=self.data_folder["metrics"]),
+            file_name=self.get_file_name(
+                prefix=self.config.metrics_prefix,
+                suffix=suffix
+            ),
+            get_index=self.has_index["metrics"],
+        )
+        return metrics_dataset
+
+    def save_metrics(
+            self,
+            metrics_handled: pd.DataFrame,
+            suffix: str | None = None
+    ) -> str:
         return self.save(
             data_frame=metrics_handled,
             folder_name=self.get_name(name=self.class_folder),
-            file_name=self.config.metrics_name
+            file_name=self.get_file_name(
+                prefix=self.config.metrics_prefix,
+                suffix=suffix
+            ),
         )
 
     @abstractmethod
-    def __handle_metrics__(self, metrics_dataset: pd.DataFrame) -> pd.DataFrame:
+    def __handle_metrics__(self, metrics_dataset: pd.DataFrame) -> tuple[pd.DataFrame, HandlerInfo]:
         pass

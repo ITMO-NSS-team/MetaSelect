@@ -2,6 +2,7 @@ from abc import ABC
 
 import pandas as pd
 
+from ms.handler.handler_info import HandlerInfo
 from ms.handler.metadata_handler import FeaturesHandler, MetricsHandler
 from ms.handler.metadata_source import TabzillaSource
 
@@ -15,15 +16,20 @@ class MetadataFormatter(FeaturesHandler, MetricsHandler, ABC):
     def class_folder(self) -> str:
         return self.config.formatted_folder
 
+    @property
+    def handler_path(self) -> str:
+        return self.config.data_path
 
     def __init__(
             self,
             features_folder: str = "raw",
             metrics_folder: str | None = "raw",
+            test_mode: bool = False,
     ):
         super().__init__(
             features_folder=features_folder,
             metrics_folder=metrics_folder,
+            test_mode=test_mode,
         )
 
 
@@ -43,6 +49,7 @@ class TabzillaFormatter(MetadataFormatter):
             self,
             features_folder: str = "raw",
             metrics_folder: str | None = "raw",
+            test_mode: bool = False,
             agg_func_features: str = "median",
             agg_func_metrics: str = "mean",
             round_attrs: list[str] | None = None,
@@ -51,6 +58,7 @@ class TabzillaFormatter(MetadataFormatter):
         super().__init__(
             features_folder=features_folder,
             metrics_folder=metrics_folder,
+            test_mode=test_mode,
         )
         self.agg_func_features = agg_func_features
         self.agg_func_metrics = agg_func_metrics
@@ -65,15 +73,15 @@ class TabzillaFormatter(MetadataFormatter):
             ]
         self.filter_families = filter_families
 
-    def __handle_features__(self, features_dataset: pd.DataFrame) -> pd.DataFrame:
+    def __handle_features__(self, features_dataset: pd.DataFrame) -> tuple[pd.DataFrame, HandlerInfo]:
         agg_features = self.__aggregate_features__(features_dataset=features_dataset)
         self.__round_attributes__(features_dataset=agg_features)
         self.__filter_families__(features_dataset=agg_features)
-        return agg_features
+        return agg_features, HandlerInfo()
 
-    def __handle_metrics__(self, metrics_dataset: pd.DataFrame) -> pd.DataFrame:
+    def __handle_metrics__(self, metrics_dataset: pd.DataFrame) -> tuple[pd.DataFrame, HandlerInfo]:
         agg_metrics = self.__aggregate_metrics__(metrics_dataset=metrics_dataset)
-        return agg_metrics
+        return agg_metrics, HandlerInfo()
 
     def __aggregate_features__(self, features_dataset: pd.DataFrame) -> pd.DataFrame:
         agg_features = features_dataset.groupby("dataset_name")
@@ -113,3 +121,13 @@ class TabzillaFormatter(MetadataFormatter):
         else:
             agg_metrics = agg_metrics.mean(numeric_only=True)
         return agg_metrics
+
+
+if __name__ == "__main__":
+    formatter = TabzillaFormatter(
+        features_folder="raw",
+        metrics_folder="raw",
+        test_mode=False,
+    )
+    formatter.handle_features(to_save=True)
+    formatter.handle_metrics(to_save=True)
