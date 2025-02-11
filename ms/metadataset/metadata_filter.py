@@ -85,6 +85,7 @@ class TabzillaFilter(MetadataFilter):
         self.__filter_outliers__(features_dataset=filtered_features)
         self.__fill_undefined_values__(features_dataset=filtered_features)
         remove_constant_features(features_dataset=filtered_features)
+        filtered_features = self.__remove_duplicates__(features_dataset=filtered_features)
 
         return filtered_features, HandlerInfo()
 
@@ -111,6 +112,10 @@ class TabzillaFilter(MetadataFilter):
         else:
             values = features_dataset.mean(numeric_only=True)
         features_dataset.fillna(values, inplace=True)
+
+    @staticmethod
+    def __remove_duplicates__(features_dataset: pd.DataFrame) -> pd.DataFrame:
+        return features_dataset.drop_duplicates().T.drop_duplicates().T
 
     def __remove_features_by_func__(self, features_dataset: pd.DataFrame) -> None:
         if self.funcs_to_exclude is not None:

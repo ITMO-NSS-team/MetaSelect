@@ -4,3 +4,6 @@ scikit-learn~=1.6.1
 scipy~=1.15.1
 pymfe~=0.4.3
 tqdm~=4.67.1
+xgboost~=2.1.4
+econml~=0.15.1
+statsmodels~=0.14.4
