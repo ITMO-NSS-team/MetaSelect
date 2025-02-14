@@ -7,7 +7,7 @@ from statsmodels.stats.outliers_influence import variance_inflation_factor
 from ms.handler.handler_info import HandlerInfo
 from ms.handler.metadata_handler import FeaturesHandler, MetricsHandler
 from ms.handler.metadata_source import MetadataSource, TabzillaSource
-from ms.utils.metadata_utils import remove_constant_features
+from ms.utils.metadata import remove_constant_features
 
 
 class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
@@ -43,7 +43,7 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
         }
 
     @property
-    def handler_path(self) -> str:
+    def save_path(self) -> str:
         return self.config.data_path
 
     def __init__(

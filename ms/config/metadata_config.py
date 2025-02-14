@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from ms.utils.ms_utils import get_project_path, pjoin
+from ms.utils.navigation import get_project_path, pjoin
 
 
 @dataclass
@@ -13,6 +13,9 @@ class MetadataConfig:
     preprocessed_folder: str = "preprocessed"
     target_folder: str = "target"
 
+    meta_learning: str = "meta_learning"
+    plots: str = "plots"
+
     model_free_folder: str = "model_free"
     correlation_folder: str = "correlation"
     info_folder: str = "info"
@@ -22,3 +25,4 @@ class MetadataConfig:
 
     features_prefix: str = "features"
     metrics_prefix: str = "metrics"
+    results_prefix: str = "results"

@@ -17,7 +17,7 @@ class MetadataFormatter(FeaturesHandler, MetricsHandler, ABC):
         return self.config.formatted_folder
 
     @property
-    def handler_path(self) -> str:
+    def save_path(self) -> str:
         return self.config.data_path
 
     def __init__(

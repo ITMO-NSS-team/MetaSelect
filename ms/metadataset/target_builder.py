@@ -23,7 +23,7 @@ class TargetBuilder(MetricsHandler, ABC):
         }
 
     @property
-    def handler_path(self) -> str:
+    def save_path(self) -> str:
         return self.config.data_path
 
     @property

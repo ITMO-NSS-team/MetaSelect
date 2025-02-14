@@ -21,7 +21,7 @@ class MethodHandler(FeaturesHandler, MetricsHandler, ABC):
         }
 
     @property
-    def handler_path(self) -> str:
+    def save_path(self) -> str:
         return self.config.results_path
 
     def __init__(
@@ -40,9 +40,14 @@ class MethodHandler(FeaturesHandler, MetricsHandler, ABC):
         self._md_source = md_source
         self.method_name = method_name
 
-    def perform(self, method_config: dict | None = None) -> None:
-        features = self.load_features()
-        metrics = self.load_metrics()
+    def perform(
+            self,
+            features_suffix: str,
+            metrics_suffix: str,
+            method_config: dict | None = None
+    ) -> None:
+        features = self.load_features(suffix=features_suffix)
+        metrics = self.load_metrics(suffix=metrics_suffix)
 
         results, file_name = self.__perform__(
             features_dataset=features,
