@@ -54,10 +54,10 @@ class FeaturesSampler(MetadataHandler):
             x_df = self.load_features(suffix=feature_suffix)
             samples_range = self.get_samples_range(features_dataset=x_df)
             features_list = list(x_df.columns)
-            for i in range(self.n_iter):
+            for i in samples_range:
                 samples_dict[i] = {}
-                for num in samples_range:
-                    samples_dict[i][num] = sample(features_list, num)
+                for j in range(self.n_iter):
+                    samples_dict[i][j] = sample(features_list, i)
             self.save_samples(
                 data=samples_dict,
                 suffix=feature_suffix
