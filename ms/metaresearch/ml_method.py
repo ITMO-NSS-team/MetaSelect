@@ -1,7 +1,9 @@
 from typing import Callable
 
+import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from econml.dml import CausalForestDML
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.feature_selection import RFECV
 from sklearn.linear_model import LassoCV
 from xgboost import XGBClassifier
@@ -18,6 +20,7 @@ class MLSelector(SelectorHandler):
             "xgb": self.__xgb_handler__,
             "lasso": self.__lasso_handler__,
             "rfe": self.__rfe__handler__,
+            "causal": self.__causal_handler__,
         }
 
     @property
@@ -121,4 +124,29 @@ class MLSelector(SelectorHandler):
 
         return res_df
 
+    def __causal_handler__(
+            self,
+            x: NDArrayFloatT,
+            y: NDArrayFloatT,
+            features_names: list[str],
+            method_config: dict | None = None,
+    ) -> pd.DataFrame:
+        inf_df = pd.DataFrame()
+        for i, f_name in enumerate(features_names):
+            T = x[:, i]
+            covariates = np.concatenate([x[:, :i], x[:, i+1:]], axis=1)
+            model_y = RandomForestRegressor()
+            model_t = RandomForestRegressor()
+            dml = CausalForestDML(model_y=model_y, model_t=model_t)
+            dml.fit(Y=y, T=T, X=covariates)
+            te = dml.effect(X=covariates)
+            inf_df[f_name] = te
+            # p = np.percentile(a=T, q=50)
+        inf_df = pd.DataFrame(inf_df.mean(), index=features_names, columns=["eff_mean"])
+        quantile_eff = inf_df["eff_mean"].abs().quantile(0.8)
 
+        for i, eff in enumerate(inf_df["eff_mean"].to_numpy()):
+            if abs(eff) < quantile_eff:
+                inf_df.iloc[i, 0] = None
+
+        return inf_df
