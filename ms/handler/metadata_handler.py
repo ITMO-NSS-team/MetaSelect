@@ -1,3 +1,4 @@
+import json
 import os
 from abc import abstractmethod, ABC
 from pathlib import Path
@@ -67,20 +68,41 @@ class MetadataHandler(SourceBased, Debuggable, ABC):
             folder_name: str,
             file_name: str,
             get_index: bool = True,
-            path: str | None = None,
+            inner_folders: list[str] = None,
+            path: Path | None = None,
     ) -> pd.DataFrame:
-        data_path = pjoin(
-            self.load_path,
-            self.source.name,
-            folder_name,
-            file_name,
+        load_path = self.get_path(
+            folder_name=folder_name,
+            file_name=file_name,
+            inner_folders=inner_folders,
+            to_save=False
         ) if path is None else path
+
         if get_index:
-            data_frame = pd.read_csv(data_path, index_col=0)
+            data_frame = pd.read_csv(load_path, index_col=0)
         else:
-            data_frame = pd.read_csv(data_path)
+            data_frame = pd.read_csv(load_path)
 
         return data_frame
+
+    def load_json(
+            self,
+            folder_name: str,
+            file_name: str,
+            inner_folders: list[str] = None,
+            path: Path | None = None,
+            to_save: bool = False,
+    ) -> dict:
+        load_path = self.get_path(
+            folder_name=folder_name,
+            file_name=file_name,
+            inner_folders=inner_folders,
+            to_save=to_save
+        ) if path is None else path
+
+        with open(load_path, "r") as f:
+            data = json.load(f)
+        return data
 
     def save(
             self,
@@ -89,12 +111,13 @@ class MetadataHandler(SourceBased, Debuggable, ABC):
             file_name: str,
             inner_folders: list[str] = None,
             save_if_exists: bool = True,
+            path: Path | None = None,
     ) -> str:
-        save_path = self.get_save_path(
+        save_path = self.get_path(
             folder_name=folder_name,
             file_name=file_name,
             inner_folders=inner_folders,
-        )
+        ) if path is None else path
 
         if os.path.isfile(save_path) and not save_if_exists:
             return save_path
@@ -112,14 +135,39 @@ class MetadataHandler(SourceBased, Debuggable, ABC):
         )
         return save_path
 
-    def get_save_path(
+    def save_json(
+            self,
+            data: dict,
+            folder_name: str,
+            file_name: str,
+            inner_folders: list[str] = None,
+            save_if_exists: bool = True,
+            path: Path | None = None,
+    ) -> str:
+        save_path = self.get_path(
+            folder_name=folder_name,
+            file_name=file_name,
+            inner_folders=inner_folders,
+        ) if path is None else path
+
+        if os.path.isfile(save_path) and not save_if_exists:
+            return save_path
+
+        save_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(save_path, "w") as f:
+            json.dump(data, f)
+
+        return save_path
+
+    def get_path(
             self,
             folder_name: str,
             file_name: str,
             inner_folders: list[str] = None,
+            to_save: bool = True,
     ) -> Path:
         path_list = [
-            self.save_path,
+            self.save_path if to_save else self.load_path,
             self.source.name,
             folder_name,
         ]
@@ -176,6 +224,19 @@ class MetadataHandler(SourceBased, Debuggable, ABC):
                 prefix=self.config.metrics_prefix,
                 suffix=suffix
             ),
+        )
+
+    def save_samples(self, data: dict, suffix: str) -> str:
+        return self.save_json(
+            data=data,
+            folder_name=self.config.sampler_folder,
+            file_name=f"{suffix}.json",
+        )
+
+    def load_samples(self, suffix: str) -> dict[int, list[str]]:
+        return self.load_json(
+            folder_name=self.config.sampler_folder,
+            file_name=f"{suffix}.json",
         )
 
     @staticmethod

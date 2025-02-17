@@ -3,12 +3,13 @@ from typing import Callable
 
 import pandas as pd
 
-from ms.handler.metadata_handler import MetricsHandler, FeaturesHandler
+from ms.handler.metadata_handler import MetadataHandler
 from ms.handler.metadata_source import MetadataSource
+from ms.metaresearch.selector_data import SelectorData
 from ms.utils.typing import NDArrayFloatT
 
 
-class MethodHandler(FeaturesHandler, MetricsHandler, ABC):
+class SelectorHandler(MetadataHandler, ABC):
     @property
     def source(self) -> MetadataSource:
         return self._md_source
@@ -29,7 +30,6 @@ class MethodHandler(FeaturesHandler, MetricsHandler, ABC):
             md_source: MetadataSource,
             features_folder: str = "processed",
             metrics_folder: str | None = "processed",
-            method_name: str = "base_name",
             test_mode: bool = False
     ) -> None:
         super().__init__(
@@ -38,41 +38,66 @@ class MethodHandler(FeaturesHandler, MetricsHandler, ABC):
             test_mode=test_mode,
         )
         self._md_source = md_source
-        self.method_name = method_name
 
     def perform(
             self,
             features_suffix: str,
             metrics_suffix: str,
-            method_config: dict | None = None
-    ) -> None:
+            selector_config: dict | None = None,
+            to_save_df: bool = True,
+    ) -> SelectorData:
         features = self.load_features(suffix=features_suffix)
         metrics = self.load_metrics(suffix=metrics_suffix)
+        samples = self.load_samples(suffix=features_suffix)
+        results = {}
+        selector_name = selector_config["method_name"]
 
-        results, file_name = self.__perform__(
-            features_dataset=features,
-            metrics_dataset=metrics,
-            method_config=method_config,
+        for sample in samples:
+            df, file_name = self.__perform__(
+                features_dataset=features.loc[:, samples[sample]],
+                metrics_dataset=metrics,
+                selector_name=selector_name,
+                selector_config=selector_config,
+            )
+            results[sample] = list(df.index)
+            if to_save_df:
+                self.save(
+                    data_frame=df,
+                    folder_name=features_suffix,
+                    file_name=f"{sample}_{file_name}",
+                    inner_folders=[
+                        selector_name,
+                        "selection_data",
+                        metrics_suffix
+                    ]
+                )
+        self.save_json(
+            data=results,
+            folder_name=features_suffix,
+            file_name=f"{metrics_suffix}.json",
+            inner_folders=[selector_name, "selection_data"]
         )
-        self.save(
-            data_frame=results,
-            folder_name=self.get_name(self.class_folder),
-            file_name=file_name
+        return SelectorData(
+            name = selector_name,
+            features_suffix=features_suffix,
+            metrics_suffix=metrics_suffix,
+            features=results
         )
 
     def __perform__(
             self,
             features_dataset: pd.DataFrame,
             metrics_dataset: pd.DataFrame,
-            method_config: dict | None = None,
+            selector_name: str,
+            selector_config: dict | None = None,
     ) -> tuple[pd.DataFrame, str]:
         x = features_dataset.to_numpy(copy=True)
         y = metrics_dataset.to_numpy(copy=True)
 
-        method_name = self.method_name if method_config is None \
-            else method_config["method_name"]
+        method_name = selector_name if selector_config is None \
+            else selector_config["method_name"]
 
-        if method_config is None or method_config["out_type"] == "multi":
+        if selector_config is None or selector_config["out_type"] == "multi":
             out_type = "multi"
             res_df = self.__multioutput_runner__(
                 method=self.methods[method_name],
@@ -80,7 +105,7 @@ class MethodHandler(FeaturesHandler, MetricsHandler, ABC):
                 y=y,
                 features_names=features_dataset.columns,
                 models_names=metrics_dataset.columns,
-                method_config=method_config,
+                method_config=selector_config,
             )
         else:
             out_type = "single"
@@ -88,16 +113,10 @@ class MethodHandler(FeaturesHandler, MetricsHandler, ABC):
                 x=x,
                 y=y,
                 features_names=features_dataset.columns,
-                method_config=method_config,
+                method_config=selector_config,
             )
         res_df.index.name = "dataset_name"
         return res_df, f"{method_name}_{out_type}.csv"
-
-    def __handle_features__(self, features_dataset: pd.DataFrame) -> pd.DataFrame:
-        return features_dataset
-
-    def __handle_metrics__(self, metrics_dataset: pd.DataFrame) -> pd.DataFrame:
-        return metrics_dataset
 
     @staticmethod
     def __multioutput_runner__(
@@ -118,7 +137,7 @@ class MethodHandler(FeaturesHandler, MetricsHandler, ABC):
             )
             model_df.columns = [f"{i}_{model_name}" for i in model_df.columns]
             res_df = pd.concat([res_df, model_df], axis=1)
-        res_df.dropna(axis="index", how="any", inplace=True)
+        res_df.dropna(axis="index", how="all", inplace=True)
         return res_df
 
     @property
