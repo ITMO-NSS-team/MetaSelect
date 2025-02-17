@@ -56,7 +56,7 @@ class MetadataHandler(SourceBased, Debuggable, ABC):
 
     @property
     def load_path(self) -> str:
-        return self.config.data_path
+        return self.config.resources
 
     @property
     @abstractmethod
