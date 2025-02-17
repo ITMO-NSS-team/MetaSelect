@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from typing import Callable
 
 import pandas as pd
 
@@ -38,6 +37,15 @@ class SelectorHandler(MetadataHandler, ABC):
             test_mode=test_mode,
         )
         self._md_source = md_source
+
+    @abstractmethod
+    def handle_data(
+            self,
+            x: NDArrayFloatT,
+            y: NDArrayFloatT,
+            features_names: list[str],
+    ) -> pd.DataFrame:
+        ...
 
     def perform(
             self,
@@ -90,47 +98,37 @@ class SelectorHandler(MetadataHandler, ABC):
         if selector_config is None or selector_config["out_type"] == "multi":
             out_type = "multi"
             res_df = self.__multioutput_runner__(
-                method=self.methods[method_name],
                 x=x,
                 y=y,
                 features_names=features_dataset.columns,
                 models_names=metrics_dataset.columns,
-                method_config=selector_config,
             )
         else:
             out_type = "single"
-            res_df = self.methods[method_name](
+            res_df = self.handle_data(
                 x=x,
                 y=y,
                 features_names=features_dataset.columns,
-                method_config=selector_config,
             )
         res_df.index.name = "dataset_name"
         return res_df, f"{method_name}_{out_type}.csv"
 
-    @staticmethod
+
     def __multioutput_runner__(
-            method: Callable,
+            self,
             x: NDArrayFloatT,
             y: NDArrayFloatT,
             features_names: list[str],
             models_names: list[str],
-            method_config: dict | None = None,
     ) -> pd.DataFrame:
         res_df = pd.DataFrame(index=features_names)
         for i, model_name in enumerate(models_names):
-            model_df = method(
+            model_df = self.handle_data(
                 x=x,
                 y=y[:, i],
                 features_names=features_names,
-                method_config=method_config,
             )
             model_df.columns = [f"{i}_{model_name}" for i in model_df.columns]
             res_df = pd.concat([res_df, model_df], axis=1)
         res_df.dropna(axis="index", how="all", inplace=True)
         return res_df
-
-    @property
-    @abstractmethod
-    def methods(self) -> dict[str, Callable]:
-        ...
