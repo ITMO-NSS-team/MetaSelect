@@ -60,8 +60,10 @@ class SelectorHandler(MetadataHandler, ABC):
         results = {}
 
         for sample in samples:
+            print(f"Sample: {sample}")
             results[sample] = {}
             for n_iter in samples[sample]:
+                print(f"Iter: {n_iter}")
                 df, file_name = self.__perform__(
                     features_dataset=features.loc[:, samples[sample][n_iter]],
                     metrics_dataset=metrics,
