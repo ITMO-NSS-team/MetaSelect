@@ -5,7 +5,7 @@ from scipy.stats import pearsonr, spearmanr
 from sklearn.feature_selection import f_classif, mutual_info_classif, chi2
 
 from ms.handler.metadata_source import MetadataSource
-from ms.handler.method_handler import SelectorHandler
+from ms.handler.selector_handler import SelectorHandler
 from ms.utils.typing import NDArrayFloatT
 
 

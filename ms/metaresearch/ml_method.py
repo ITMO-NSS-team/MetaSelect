@@ -9,7 +9,7 @@ from sklearn.linear_model import LassoCV
 from xgboost import XGBClassifier
 
 from ms.handler.metadata_source import MetadataSource
-from ms.handler.method_handler import SelectorHandler
+from ms.handler.selector_handler import SelectorHandler
 from ms.utils.typing import NDArrayFloatT
 
 
