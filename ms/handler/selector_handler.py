@@ -29,6 +29,7 @@ class SelectorHandler(MetadataHandler, ABC):
             md_source: MetadataSource,
             features_folder: str = "processed",
             metrics_folder: str | None = "processed",
+            out_type: str = "multi",
             test_mode: bool = False
     ) -> None:
         super().__init__(
@@ -37,6 +38,7 @@ class SelectorHandler(MetadataHandler, ABC):
             test_mode=test_mode,
         )
         self._md_source = md_source
+        self.out_type = out_type
 
     @abstractmethod
     def handle_data(
@@ -51,13 +53,11 @@ class SelectorHandler(MetadataHandler, ABC):
             self,
             features_suffix: str,
             metrics_suffix: str,
-            selector_config: dict | None = None,
     ) -> SelectorData:
         features = self.load_features(suffix=features_suffix)
         metrics = self.load_metrics(suffix=metrics_suffix)
         samples = self.load_samples(suffix=features_suffix)
         results = {}
-        selector_name = selector_config["method_name"]
 
         for sample in samples:
             results[sample] = {}
@@ -65,18 +65,16 @@ class SelectorHandler(MetadataHandler, ABC):
                 df, file_name = self.__perform__(
                     features_dataset=features.loc[:, samples[sample][n_iter]],
                     metrics_dataset=metrics,
-                    selector_name=selector_name,
-                    selector_config=selector_config,
                 )
                 results[sample][n_iter] = list(df.index)
         self.save_json(
             data=results,
             folder_name=features_suffix,
             file_name=f"{metrics_suffix}.json",
-            inner_folders=[selector_name, "selection_data"]
+            inner_folders=[self.class_folder, "selection_data"]
         )
         return SelectorData(
-            name = selector_name,
+            name = self.class_folder,
             features_suffix=features_suffix,
             metrics_suffix=metrics_suffix,
             features=results
@@ -86,16 +84,11 @@ class SelectorHandler(MetadataHandler, ABC):
             self,
             features_dataset: pd.DataFrame,
             metrics_dataset: pd.DataFrame,
-            selector_name: str,
-            selector_config: dict | None = None,
     ) -> tuple[pd.DataFrame, str]:
         x = features_dataset.to_numpy(copy=True)
         y = metrics_dataset.to_numpy(copy=True)
 
-        method_name = selector_name if selector_config is None \
-            else selector_config["method_name"]
-
-        if selector_config is None or selector_config["out_type"] == "multi":
+        if self.out_type == "multi":
             out_type = "multi"
             res_df = self.__multioutput_runner__(
                 x=x,
@@ -111,7 +104,7 @@ class SelectorHandler(MetadataHandler, ABC):
                 features_names=features_dataset.columns,
             )
         res_df.index.name = "dataset_name"
-        return res_df, f"{method_name}_{out_type}.csv"
+        return res_df, f"{self.class_name}_{out_type}.csv"
 
 
     def __multioutput_runner__(
