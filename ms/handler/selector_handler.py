@@ -44,7 +44,6 @@ class SelectorHandler(MetadataHandler, ABC):
             features_suffix: str,
             metrics_suffix: str,
             selector_config: dict | None = None,
-            to_save_df: bool = True,
     ) -> SelectorData:
         features = self.load_features(suffix=features_suffix)
         metrics = self.load_metrics(suffix=metrics_suffix)
@@ -53,24 +52,15 @@ class SelectorHandler(MetadataHandler, ABC):
         selector_name = selector_config["method_name"]
 
         for sample in samples:
-            df, file_name = self.__perform__(
-                features_dataset=features.loc[:, samples[sample]],
-                metrics_dataset=metrics,
-                selector_name=selector_name,
-                selector_config=selector_config,
-            )
-            results[sample] = list(df.index)
-            if to_save_df:
-                self.save(
-                    data_frame=df,
-                    folder_name=features_suffix,
-                    file_name=f"{sample}_{file_name}",
-                    inner_folders=[
-                        selector_name,
-                        "selection_data",
-                        metrics_suffix
-                    ]
+            results[sample] = {}
+            for n_iter in samples[sample]:
+                df, file_name = self.__perform__(
+                    features_dataset=features.loc[:, samples[sample][n_iter]],
+                    metrics_dataset=metrics,
+                    selector_name=selector_name,
+                    selector_config=selector_config,
                 )
+                results[sample][n_iter] = list(df.index)
         self.save_json(
             data=results,
             folder_name=features_suffix,
