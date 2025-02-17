@@ -6,12 +6,14 @@ from ms.utils.navigation import get_project_path, pjoin
 class MetadataConfig:
     data_path: str = pjoin(get_project_path(), "resources")
     results_path: str = pjoin(get_project_path(), "results")
+    plots_path: str = pjoin(get_project_path(), "plots")
     raw_folder: str = "raw"
 
     formatted_folder: str = "formatted"
     filtered_folder: str = "filtered"
     preprocessed_folder: str = "preprocessed"
     target_folder: str = "target"
+    sampler_folder: str = "sampler"
 
     meta_learning: str = "meta_learning"
     plots: str = "plots"
