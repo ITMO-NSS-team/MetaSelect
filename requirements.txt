@@ -1,10 +1,10 @@
-numpy~=2.1.3
+numpy~=1.26.4
 pandas~=2.2.3
-scikit-learn~=1.6.1
-scipy~=1.15.1
-pymfe~=0.4.3
-tqdm~=4.67.1
-xgboost~=2.1.4
-econml~=0.15.1
+scikit-learn~=1.5.2
 statsmodels~=0.14.4
+xgboost~=2.1.4
+pymfe~=0.4.3
+econml~=0.15.1
+scipy~=1.15.1
+matplotlib~=3.10.0
 optuna~=4.2.1
