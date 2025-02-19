@@ -4,11 +4,12 @@ from ms.utils.navigation import get_project_path, pjoin
 
 @dataclass
 class MetadataConfig:
-    data_path: str = pjoin(get_project_path(), "resources")
-    results_path: str = pjoin(get_project_path(), "results")
-    plots_path: str = pjoin(get_project_path(), "plots")
-    raw_folder: str = "raw"
+    project_path: str = pjoin(get_project_path())
+    resources: str = pjoin(project_path, "resources")
+    results_path: str = pjoin(project_path, "results")
+    plots_path: str = pjoin(project_path, "plots")
 
+    raw_folder: str = "raw"
     formatted_folder: str = "formatted"
     filtered_folder: str = "filtered"
     preprocessed_folder: str = "preprocessed"
@@ -19,10 +20,6 @@ class MetadataConfig:
     plots: str = "plots"
 
     model_free_folder: str = "model_free"
-    correlation_folder: str = "correlation"
-    info_folder: str = "info"
-    chi_square_folder: str = "chi_square"
-
     ml_folder: str = "ml"
 
     features_prefix: str = "features"

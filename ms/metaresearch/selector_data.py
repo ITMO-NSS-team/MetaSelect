@@ -14,7 +14,12 @@ class SelectorData:
         self.metrics_suffix = metrics_suffix
         self.features = features
 
-    def get_features(self, x: pd.DataFrame, sample_size: int) -> pd.DataFrame:
+    def get_features(
+            self,
+            x: pd.DataFrame,
+            sample_size: int,
+            n_iter: int,
+    ) -> pd.DataFrame:
         if self.features is None:
             return x
-        return x.loc[:, self.features[sample_size]]
+        return x.loc[:, self.features[sample_size][n_iter]]

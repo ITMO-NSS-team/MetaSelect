@@ -24,7 +24,7 @@ class MetadataFilter(FeaturesHandler, MetricsHandler, ABC):
 
     @property
     def save_path(self) -> str:
-        return self.config.data_path
+        return self.config.resources
 
     @property
     def class_folder(self) -> str:
