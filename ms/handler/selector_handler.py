@@ -54,9 +54,16 @@ class SelectorHandler(MetadataHandler, ABC):
             features_suffix: str,
             metrics_suffix: str,
     ) -> SelectorData:
-        features = self.load_features(suffix=features_suffix)
-        metrics = self.load_metrics(suffix=metrics_suffix)
-        samples = self.load_samples(suffix=features_suffix)
+        samples = self.load_samples(
+            file_name="samples",
+            inner_folders=[features_suffix]
+        )
+        split = self.load_samples(
+            file_name="split",
+            inner_folders=[features_suffix]
+        )
+        features = self.load_features(suffix=features_suffix).loc[split["x_train"], :]
+        metrics = self.load_metrics(suffix=metrics_suffix).loc[split["y_train"], :]
         results = {}
 
         for sample in samples:
