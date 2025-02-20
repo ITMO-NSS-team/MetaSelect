@@ -32,7 +32,7 @@ class Plotter(MetadataHandler):
 
     @property
     def save_path(self) -> str:
-        return self.config.results_path
+        return self.config.plots_path
 
     @property
     def load_path(self) -> str:
@@ -89,15 +89,13 @@ class Plotter(MetadataHandler):
                                     prefix=self.config.results_prefix,
                                     suffix=sample,
                                 ),
+                                to_save=False
                             )
                             res = self.load(
                                 folder_name="",
                                 file_name="",
                                 path=load_path,
                             )
-                            print(res)
-                            print(target_models)
-                            print(selector.features[sample])
                             res.index = target_models * len(selector.features[sample])
                             res.index.name = "model"
                             res_list.append(res)
@@ -113,6 +111,7 @@ class Plotter(MetadataHandler):
                     )
                     if sel_res_path.exists() and not self.rewrite:
                         continue
+                    os.makedirs(os.path.dirname(sel_res_path), exist_ok=True)
                     self.plot_selector_results(
                         selector_name=selector.name,
                         metamodels_res=model_res,
@@ -137,6 +136,7 @@ class Plotter(MetadataHandler):
             metric: str,
             save_path: str,
     ):
+        print(f"Plotting {selector_name}")
         fig, axs = plt.subplots(2, 2, figsize=(15, 10))
         cells = [axs[0, 0], axs[0, 1], axs[1, 0], axs[1, 1]]
         for i, metamodel in enumerate(metamodels_res):
@@ -144,9 +144,10 @@ class Plotter(MetadataHandler):
                 title=metamodel,
                 ylabel=f"{metric[5:]}",
             )
-            sns.lineplot(
+            metamodels_res[metamodel].rename({"samples": "init feature numbers"}, axis=1, inplace=True)
+            sns.barplot(
                 data=metamodels_res[metamodel],
-                x="samples",
+                x="init feature numbers",
                 y=metric,
                 hue="model",
                 ax=cells[i]
@@ -157,6 +158,7 @@ class Plotter(MetadataHandler):
         plt.subplots_adjust(top=0.95)
 
         plt.savefig(save_path, dpi=300)
+        plt.close(fig)
 
     def plot_selector_comparison(
             self,
@@ -168,6 +170,7 @@ class Plotter(MetadataHandler):
             metric,
     ):
         for metamodel in metamodels:
+            print(f"Plotting selectors comparison for {metamodel}")
             if len(target_models) > 1:
                 fig, axs = plt.subplots(3, 2, figsize=(15, 15))
             else:
@@ -199,9 +202,10 @@ class Plotter(MetadataHandler):
                     # [bar.set_alpha(0.1) for bar in bars]
                     # [cap.set_alpha(1.0) for cap in caps]
                 target_df = pd.concat(target_model_res)
-                sns.lineplot(
+                target_df.rename({"samples": "init feature numbers"}, axis=1, inplace=True)
+                sns.barplot(
                     data=target_df,
-                    x="samples",
+                    x="init feature numbers",
                     y=metric,
                     hue="selector",
                     ax=ax
@@ -219,3 +223,4 @@ class Plotter(MetadataHandler):
                 continue
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
             plt.savefig(save_path, dpi=300)
+            plt.close(fig)
