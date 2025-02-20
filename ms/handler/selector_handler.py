@@ -53,29 +53,72 @@ class SelectorHandler(MetadataHandler, ABC):
             self,
             features_suffix: str,
             metrics_suffix: str,
+            rewrite: bool = False,
     ) -> SelectorData:
-        samples = self.load_samples(
-            file_name="samples",
+        slices = self.load_samples(
+            file_name=f"{self.config.slices_prefix}",
             inner_folders=[features_suffix]
         )
-        split = self.load_samples(
-            file_name="split",
+        splits = self.load_samples(
+            file_name=f"{self.config.splits_prefix}",
             inner_folders=[features_suffix]
         )
-        features = self.load_features(suffix=features_suffix).loc[split["x_train"], :]
-        metrics = self.load_metrics(suffix=metrics_suffix).loc[split["y_train"], :]
+
+        features = self.load_features(suffix=features_suffix)
+        metrics = self.load_metrics(suffix=metrics_suffix)
         results = {}
 
-        for sample in samples:
-            print(f"Sample: {sample}")
-            results[sample] = {}
-            for n_iter in samples[sample]:
-                print(f"Iter: {n_iter}")
-                df, file_name = self.__perform__(
-                    features_dataset=features.loc[:, samples[sample][n_iter]],
-                    metrics_dataset=metrics,
+        json_path = self.get_path(
+            folder_name=features_suffix,
+            file_name=f"{metrics_suffix}.json",
+            inner_folders=[self.class_folder, "selection_data"]
+        )
+        if not rewrite and json_path.exists():
+            return SelectorData(
+                name = self.class_folder,
+                features_suffix=features_suffix,
+                metrics_suffix=metrics_suffix,
+                features=self.load_json(
+                    folder_name="",
+                    file_name="",
+                    path=json_path
                 )
-                results[sample][n_iter] = list(df.index)
+            )
+
+        for f_slice in slices:
+            print(f"Slice: {f_slice}")
+            results[f_slice] = {}
+            # res_list = []
+            # res_path = self.get_path(
+            #     folder_name=features_suffix,
+            #     file_name=f"{sample}.csv",
+            #     inner_folders=[self.class_folder, "selection_data", "samples"]
+            # )
+            # if not rewrite and res_path.exists():
+            #     continue
+            for n_iter in slices[f_slice]:
+                print(f"Iteration: {n_iter}")
+                results[f_slice][n_iter] = {}
+                for fold in splits:
+                    print(f"Fold: {fold}")
+                    train = splits[fold]["train"]
+                    df, file_name = self.__perform__(
+                        features_dataset=features.iloc[
+                            train,
+                            (slices[f_slice][n_iter])
+                        ],
+                        metrics_dataset=metrics.iloc[train, :],
+                    )
+                    # df.columns = [f"{col}_{n_iter}" for col in df.columns]
+                    # res_list.append(df)
+                    results[f_slice][n_iter][fold] = list(df.index)
+            # res_df = pd.concat(res_list, axis=1)
+            # self.save(
+            #     data_frame=res_df,
+            #     folder_name="",
+            #     file_name="",
+            #     path=res_path,
+            # )
         self.save_json(
             data=results,
             folder_name=features_suffix,
