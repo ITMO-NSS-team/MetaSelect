@@ -1,22 +1,17 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 import numpy as np
 import pandas as pd
-from econml.dml import CausalForestDML
-from sklearn.ensemble import RandomForestRegressor
-
-from ms.handler.metadata_source import MetadataSource
-from ms.handler.selector_handler import SelectorHandler
-from ms.utils.typing import NDArrayFloatT
-
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from econml.dml import CausalForestDML
+from sklearn.ensemble import RandomForestRegressor
 from torch.utils.data import TensorDataset, DataLoader
-from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from ms.handler.metadata_source import MetadataSource
 from ms.handler.selector_handler import SelectorHandler
 from ms.utils.typing import NDArrayFloatT
-
 
 
 class TESelector(SelectorHandler):
