@@ -11,7 +11,7 @@ random.seed(seed)
 if __name__ == "__main__":
     selectors_to_use = ["base", "corr", "f_val", "mi", "xgb", "lasso", "rfe", "te"]
     selectors = [all_handlers[selector][1] for selector in selectors_to_use if selector != "rfe"]
-    metrics_suffixes = ["diff"]
+    metrics_suffixes = ["perf_abs", "perf_rel", "diff"]
 
     f_sampler = MetadataSampler(
         md_source=md_source,
