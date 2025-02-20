@@ -25,3 +25,5 @@ class MetadataConfig:
     features_prefix: str = "features"
     metrics_prefix: str = "metrics"
     results_prefix: str = "results"
+    splits_prefix: str = "splits"
+    slices_prefix: str = "slices"

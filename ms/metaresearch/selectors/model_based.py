@@ -1,8 +1,6 @@
 from abc import abstractmethod, ABC
 
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.feature_selection import RFECV
 from sklearn.linear_model import LassoCV
 from xgboost import XGBClassifier
 
@@ -118,58 +116,6 @@ class LassoSelector(SelectorHandler, ModelBased):
 
         for i, coef in enumerate(lasso.coef_):
             if abs(coef) <= self.coef_threshold:
-                res_df.iloc[i, 0] = None
-
-        return res_df
-
-
-class RFESelector(SelectorHandler, ModelBased):
-    @property
-    def class_folder(self) -> str:
-        return "rfe"
-
-    @property
-    def class_name(self) -> str:
-        return "rfe"
-
-    @property
-    def params(self) -> dict:
-        return {
-                "estimator": RandomForestClassifier(),
-                "step": 0.9,
-                "cv": 5,
-            }
-
-    def __init__(
-            self,
-            md_source: MetadataSource,
-            features_folder: str = "preprocessed",
-            metrics_folder: str | None = "preprocessed",
-            rank_threshold: float = 1.0,
-            test_mode: bool = False,
-    ) -> None:
-        super().__init__(
-            md_source=md_source,
-            features_folder=features_folder,
-            metrics_folder=metrics_folder,
-            test_mode=test_mode,
-        )
-        self.rank_threshold = rank_threshold
-
-    def handle_data(
-            self,
-            x: NDArrayFloatT,
-            y: NDArrayFloatT,
-            features_names: list[str],
-    ) -> pd.DataFrame:
-        rfe = RFECV(**self.params)
-        rfe.fit(X=x, y=y)
-
-        res_df = pd.DataFrame(index=features_names)
-        res_df["rfe_fi"] = rfe.ranking_
-
-        for i, rank in enumerate(rfe.ranking_):
-            if rank > self.rank_threshold:
                 res_df.iloc[i, 0] = None
 
         return res_df

@@ -9,11 +9,11 @@ from ms.utils.typing import NDArrayFloatT
 class BaseSelector(SelectorHandler):
     @property
     def class_folder(self) -> str:
-        return "no_selector"
+        return "base"
 
     @property
     def class_name(self) -> str:
-        return "no_selector"
+        return "base"
 
     def __init__(
             self,
