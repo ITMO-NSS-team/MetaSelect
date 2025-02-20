@@ -105,9 +105,9 @@ class Plotter(MetadataHandler):
                         folder_name=feature_suffix,
                         inner_folders=[
                             selector.name,
-                            target_suffix,
+                            # target_suffix,
                         ],
-                        file_name=f"{selector.name}.png",
+                        file_name=f"{target_suffix}.png",
                     )
                     if sel_res_path.exists() and not self.rewrite:
                         continue

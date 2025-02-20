@@ -1,11 +1,6 @@
-import random
-
 from ms.metaresearch.plotting import Plotter
 from ms.pipeline import meta_learner, metrics_suffixes, selectors_to_use
 from ms.pipeline_constants import *
-
-np.random.seed(seed)
-random.seed(seed)
 
 
 if __name__ == "__main__":
