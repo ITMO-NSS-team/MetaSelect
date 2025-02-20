@@ -3,15 +3,15 @@ import os.path
 from pathlib import Path
 from typing import Callable
 
-import numpy as np
 import pandas as pd
 
 from ms.handler.metadata_handler import MetadataHandler
 from ms.handler.metadata_source import MetadataSource
-from ms.handler.selector_handler import SelectorHandler
 from ms.metaresearch.meta_model import MetaModel
 from ms.metaresearch.selector_data import SelectorData
+from ms.metaresearch.selectors.model_wrapper import RFESelector
 from ms.utils.navigation import pjoin
+
 
 class MetaLearner(MetadataHandler):
     @property
@@ -44,7 +44,7 @@ class MetaLearner(MetadataHandler):
             model_scoring: dict[str, Callable],
             features_folder: str = "preprocessed",
             metrics_folder: str | None = "preprocessed",
-            use_optuna: bool = True,
+            opt_method: str | None = None,
             opt_cv: int = 5,
             model_cv: int = 10,
             n_trials: int = 50,
@@ -58,7 +58,7 @@ class MetaLearner(MetadataHandler):
         self._md_source = md_source
         self.opt_scoring = model_scoring[opt_scoring]
         self.model_scoring = model_scoring
-        self.opt_method = "optuna" if use_optuna else "grid_search"
+        self.opt_method = opt_method
         self.opt_cv = opt_cv
         self.model_cv = model_cv
         self.n_trials = n_trials
@@ -68,19 +68,24 @@ class MetaLearner(MetadataHandler):
             models: list[MetaModel],
             feature_suffixes: list[str],
             target_suffixes: list[str],
-            selectors_handlers: list[SelectorHandler],
+            selector_names: list[str],
             rewrite: bool = True,
             to_save: bool = True,
     ) -> None:
         selectors = self.load_selectors(
             features_suffixes=feature_suffixes,
             metrics_suffixes=target_suffixes,
-            selectors_handlers=selectors_handlers,
+            selector_names=selector_names,
         )
         for feature_suffix in feature_suffixes:
             print(f"Feature suffix: {feature_suffix}")
             x_df = self.load_features(suffix=feature_suffix)
-            for selector in selectors:
+            splits = self.load_samples(
+                file_name=f"{self.config.splits_prefix}",
+                inner_folders=[feature_suffix]
+            )
+            for s_data in selectors:
+                selector = s_data
                 if selector.features_suffix != feature_suffix:
                     continue
                 print(f"Selector: {selector.name}")
@@ -89,6 +94,15 @@ class MetaLearner(MetadataHandler):
                     y_df = self.load_metrics(suffix=target_suffix)
                     for model in models:
                         print(f"Metamodel: {model.name}")
+                        if selector.name == "rfe":
+                            if model.name == "knn":
+                                continue
+                            rfe_handler = RFESelector(md_source=self.source, model=model)
+                            selector = rfe_handler.perform(
+                                features_suffix=feature_suffix,
+                                metrics_suffix=target_suffix,
+                                rewrite=rewrite,
+                            )
                         for sample in selector.features:
                             print(f"Sample size: {sample}")
 
@@ -111,19 +125,15 @@ class MetaLearner(MetadataHandler):
                             sample_params = {}
                             for n_iter in selector.features[sample]:
                                 print(f"Iter: {n_iter}")
-                                x_selected = selector.get_features(
-                                    x=x_df,
-                                    sample_size=sample,
-                                    n_iter=n_iter,
-                                )
                                 model_scores = model.run(
-                                    x=x_selected,
+                                    x=x_df,
                                     y=y_df,
+                                    splits=splits,
+                                    slices=selector.features[sample][n_iter],
                                     opt_scoring=self.opt_scoring,
                                     model_scoring=self.model_scoring,
                                     opt_method=self.opt_method,
                                     opt_cv=self.opt_cv,
-                                    model_cv=self.model_cv,
                                     n_trials=self.n_trials,
                                 )
 
@@ -131,6 +141,7 @@ class MetaLearner(MetadataHandler):
                                     model_scores=model_scores,
                                     n_samples=sample
                                 )
+                                # print(formatted_scores)
                                 sample_res.append(formatted_scores)
                                 sample_params[n_iter] = formatted_params
                             sample_res = pd.concat(sample_res)
@@ -163,12 +174,6 @@ class MetaLearner(MetadataHandler):
     ) -> tuple[pd.DataFrame, dict]:
         res_df = pd.DataFrame()
         for model in model_scores.keys():
-            model_scores[model]["cv"]["fit_score_time"] = list(
-                np.array(model_scores[model]["cv"]["fit_time"]) +
-                np.array(model_scores[model]["cv"]["score_time"])
-            )
-            model_scores[model]["cv"].pop("fit_time")
-            model_scores[model]["cv"].pop("score_time")
             cur_df_mean = pd.DataFrame(model_scores[model]["cv"])
             new_cols_mean = [f"{i}_mean" for i in cur_df_mean.columns]
             cur_df_mean.columns = new_cols_mean
@@ -207,24 +212,38 @@ class MetaLearner(MetadataHandler):
             self,
             features_suffixes: list[str],
             metrics_suffixes: list[str],
-            selectors_handlers: list[SelectorHandler],
+            selector_names: list[str],
+            all_data: bool = False,
     ) -> list[SelectorData]:
         selectors = []
         for features_suffix in features_suffixes:
             for metrics_suffix in metrics_suffixes:
-                for handler in selectors_handlers:
-                    results = self.load_json(
-                        folder_name=features_suffix,
-                        file_name=f"{metrics_suffix}.json",
-                        inner_folders=[handler.class_folder, "selection_data"],
-                        to_save=True,
-                    )
-                    selectors.append(
-                        SelectorData(
-                            name=handler.class_folder,
-                            features_suffix=features_suffix,
-                            metrics_suffix=metrics_suffix,
-                            features=results
+                for s_name in selector_names:
+                    if s_name != "rfe" or (s_name == "rfe" and all_data):
+                        results = self.load_json(
+                            folder_name=features_suffix,
+                            file_name=f"{metrics_suffix}.json",
+                            inner_folders=[
+                                s_name,
+                                "selection_data"
+                            ],
+                            to_save=True,
                         )
-                    )
+                        selectors.append(
+                            SelectorData(
+                                name=s_name,
+                                features_suffix=features_suffix,
+                                metrics_suffix=metrics_suffix,
+                                features=results
+                            )
+                        )
+                    else:
+                        selectors.append(
+                            SelectorData(
+                                name=s_name,
+                                features_suffix=features_suffix,
+                                metrics_suffix=metrics_suffix,
+                                features=None
+                            )
+                        )
         return selectors

@@ -27,11 +27,12 @@ class MetaModel:
             self,
             x: pd.DataFrame,
             y: pd.DataFrame,
+            splits: dict,
+            slices: dict,
             opt_scoring: Callable,
             model_scoring: dict[str, Callable],
-            opt_method: str,
+            opt_method: str | None,
             opt_cv: int,
-            model_cv: int,
             n_trials: int
     ) -> dict[str, dict]:
         print(f"Meta-model: {self.name}")
@@ -57,7 +58,6 @@ class MetaModel:
                     n_trials=n_trials
                 )
                 best_params = study.best_params
-                self.model.set_params(**best_params)
             elif opt_method == "grid_search" and self.params:
                 print(f"Using GridSearchCV for {target_model}")
                 grid_search = GridSearchCV(
@@ -68,16 +68,16 @@ class MetaModel:
                 )
                 grid_search.fit(x, y[target_model])
                 best_params = grid_search.best_params_
-                self.model.set_params(**best_params)
             else:
-                best_params = None
-            cv_results = cross_validate(
+                best_params = self.params
+            self.model.set_params(**best_params)
+            cv_results = self.custom_cv(
                 estimator=self.model,
-                X=x,
-                y=y.loc[:, target_model],
-                scoring=model_scoring,
-                cv=model_cv,
-                error_score="raise",
+                x_df=x,
+                y_df=y.loc[:, target_model],
+                splits=splits,
+                slices=slices,
+                scoring=model_scoring
             )
             model_scores[target_model]["cv"] = cv_results
             if best_params is not None:
@@ -102,7 +102,7 @@ class MetaModel:
                 param_grid[param] = trial.suggest_int(param, min(values), max(values))
             elif all(isinstance(v, float) for v in values):
                 param_grid[param] = trial.suggest_float(param, min(values), max(values))
-            elif all(isinstance(v, (int, float)) for v in values):  # Mixed int/float
+            elif all(isinstance(v, (int, float)) for v in values):
                 param_grid[param] = trial.suggest_float(param, float(min(values)), float(max(values)))
             else:
                 param_grid[param] = trial.suggest_categorical(param, values)
@@ -117,3 +117,39 @@ class MetaModel:
             error_score="raise",
         )
         return cv_results["test_score"].mean()
+
+    @staticmethod
+    def custom_cv(estimator, x_df, y_df, splits, slices, scoring) -> dict:
+        res = {}
+        for score_name, score_func in scoring.items():
+            res[f"test_{score_name}"] = []
+            for i in splits:
+                train = splits[i]["train"]
+                test = splits[i]["test"]
+                estimator.fit(
+                    x_df.iloc[train, :].loc[:, slices[i]],
+                    y_df.iloc[train]
+                )
+                res[f"test_{score_name}"].append(
+                    score_func(
+                        estimator=estimator,
+                        X=x_df.iloc[test, :].loc[:, slices[i]],
+                        y_true=y_df.iloc[test],
+                    )
+                )
+        # for i in splits:
+        #     train = splits[i]["train"]
+        #     test = splits[i]["test"]
+        #     res[i] = {}
+        #
+        #     estimator.fit(
+        #         x_df.iloc[train, :].loc[:, slices[i]],
+        #         y_df.iloc[train]
+        #     )
+        #     for score_name, score_func in scoring.items():
+        #         res[i][f"test_{score_name}"] = score_func(
+        #             estimator=estimator,
+        #             X=x_df.iloc[test, :].loc[:, slices[i]],
+        #             y_true=y_df.iloc[test],
+        #         )
+        return res
