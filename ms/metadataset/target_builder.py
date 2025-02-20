@@ -24,7 +24,7 @@ class TargetBuilder(MetricsHandler, ABC):
 
     @property
     def save_path(self) -> str:
-        return self.config.data_path
+        return self.config.resources
 
     @property
     def class_folder(self) -> str:
@@ -248,9 +248,9 @@ class TargetDiffBuilder(TargetBuilder):
             = metrics_dataset[models[0]] - metrics_dataset[models[1]]
 
         disc = KBinsDiscretizer(
-            n_bins=3,
+            n_bins=self.n_bins,
             encode="ordinal",
-            strategy="quantile",
+            strategy=self.strategy,
         )
         diff_df.iloc[:, 0] = disc.fit_transform(X=diff_df)
         self._col_name = diff_df.columns[0]

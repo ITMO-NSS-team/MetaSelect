@@ -44,7 +44,7 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
 
     @property
     def save_path(self) -> str:
-        return self.config.data_path
+        return self.config.resources
 
     def __init__(
             self,

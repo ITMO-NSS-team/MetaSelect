@@ -8,3 +8,4 @@ econml~=0.15.1
 scipy~=1.15.1
 matplotlib~=3.10.0
 optuna~=4.2.1
+seaborn~=0.13.2

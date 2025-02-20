@@ -56,7 +56,7 @@ class MetadataHandler(SourceBased, Debuggable, ABC):
 
     @property
     def load_path(self) -> str:
-        return self.config.data_path
+        return self.config.resources
 
     @property
     @abstractmethod
@@ -226,17 +226,28 @@ class MetadataHandler(SourceBased, Debuggable, ABC):
             ),
         )
 
-    def save_samples(self, data: dict, suffix: str) -> str:
+    def save_samples(
+            self,
+            data: dict,
+            file_name: str,
+            inner_folders: list[str] | None = None,
+    ) -> str:
         return self.save_json(
             data=data,
             folder_name=self.config.sampler_folder,
-            file_name=f"{suffix}.json",
+            file_name=f"{file_name}.json",
+            inner_folders=inner_folders,
         )
 
-    def load_samples(self, suffix: str) -> dict[int, list[str]]:
+    def load_samples(
+            self,
+            file_name: str,
+            inner_folders: list[str] | None = None,
+    ) -> dict:
         return self.load_json(
             folder_name=self.config.sampler_folder,
-            file_name=f"{suffix}.json",
+            file_name=f"{file_name}.json",
+            inner_folders=inner_folders,
         )
 
     @staticmethod
