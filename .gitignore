@@ -13,3 +13,10 @@ ms/metaresearch/__pycache__/
 ms/metaresearch/selectors/__pycache__/causal.cpython-311.pyc
 ms/metaresearch/selectors/__pycache__/
 ms/metaresearch/selectors/ms
+ms/metadataset/__pycache__/metadata_sampler.cpython-311.pyc
+ms/metadataset/__pycache__/
+ms/metadataset/ms
+resources/tabzilla/preprocessed/metrics__diff.csv
+resources/
+results/tabzilla/power/cf/perf_abs/logreg/results__90.csv
+results

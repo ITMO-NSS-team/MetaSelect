@@ -132,25 +132,19 @@ class CFSelector(SelectorHandler):
 
             for future in as_completed(futures):
                 feat_idx = futures[future]
-                try:
-                    fitness = future.result()
-                    fitness_results[feat_idx] = fitness
-                    print(f"Feature {features_names[feat_idx]} fitness: {fitness:.4f}")
-                except Exception as e:
-                    print(f"Feature {features_names[feat_idx]} evaluation failed: {e}")
-                    fitness_results[feat_idx] = 0.0
+                fitness = future.result()
+                fitness_results[feat_idx] = fitness
+                
 
         inf_df = pd.DataFrame.from_dict(
             fitness_results, orient="index", columns=["fitness"]
         )
-        inf_df.index = features_names
-        inf_df.loc[inf_df["fitness"].abs() == 1.0, "fitness"] = None
+        new_features_names = [features_names[i] for i in fitness_results]
+        inf_df.index = new_features_names
+        inf_df.loc[inf_df["fitness"].abs() == 0.0, "fitness"] = None
         return inf_df
 
     def _evaluate_feature_subset(self, X_train, y_train, feature_mask):
-        if feature_mask.sum() == 0:
-            return 0.0
-
         X_train_masked = X_train[:, feature_mask]
         X_train_tensor = torch.FloatTensor(X_train_masked).to(self.device)
         y_train_tensor = torch.LongTensor(y_train).to(self.device)
