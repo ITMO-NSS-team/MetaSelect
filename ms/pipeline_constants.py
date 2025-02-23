@@ -7,10 +7,10 @@ from xgboost import XGBClassifier
 
 from ms.handler.metadata_source import TabzillaSource
 from ms.metaresearch.meta_model import MetaModel
-from ms.metaresearch.selectors.base import *
-from ms.metaresearch.selectors.causal import *
-from ms.metaresearch.selectors.model_based import *
-from ms.metaresearch.selectors.model_free import *
+from ms.metaresearch.selectors.base import BaseSelector
+from ms.metaresearch.selectors.causal import TESelector
+from ms.metaresearch.selectors.model_based import XGBSelector, LassoSelector
+from ms.metaresearch.selectors.model_free import CorrelationSelector, FValueSelector, MutualInfoSelector
 
 seed = 42
 
