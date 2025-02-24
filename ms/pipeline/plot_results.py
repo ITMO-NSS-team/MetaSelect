@@ -1,6 +1,6 @@
 from ms.metaresearch.plotting import Plotter
-from ms.pipeline import meta_learner, metrics_suffixes, selectors_to_use
-from ms.pipeline_constants import *
+from ms.pipeline.init_features_experiment import meta_learner, metrics_suffixes, selectors_to_use
+from ms.pipeline.pipeline_constants import *
 
 
 if __name__ == "__main__":

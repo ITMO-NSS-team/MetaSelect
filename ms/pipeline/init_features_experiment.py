@@ -2,7 +2,7 @@ import random
 
 from ms.metadataset.metadata_sampler import MetadataSampler
 from ms.metaresearch.meta_learning import MetaLearner
-from ms.pipeline_constants import *
+from ms.pipeline.pipeline_constants import *
 import numpy as np
 
 np.random.seed(seed)
