@@ -29,7 +29,7 @@ meta_learner = MetaLearner(
         test_mode=False,
     )
 
-selectors_to_use = ["base", "corr", "f_val", "mi", "xgb", "lasso", "rfe", "te"]
+selectors_to_use = ["base", "corr", "f_val", "mi", "xgb", "lasso", "rfe", "te", "cf"]
 selectors = [all_handlers[selector][1] for selector in selectors_to_use if selector != "rfe"]
 metrics_suffixes = ["perf_abs", "perf_rel", "diff"]
 
@@ -37,7 +37,7 @@ if __name__ == "__main__":
     f_sampler.sample_data(
         feature_suffixes=["power"],
         target_suffix="perf_abs",
-        rewrite=False
+        rewrite=True
     )
 
     for features_suffix in features_suffixes:
