@@ -6,6 +6,7 @@ from sklearn.neural_network import MLPClassifier
 from xgboost import XGBClassifier
 
 from ms.handler.metadata_source import TabzillaSource
+from ms.metaresearch.meta_learning import MetaLearner
 from ms.metaresearch.meta_model import MetaModel
 from ms.metaresearch.selectors.base import BaseSelector
 from ms.metaresearch.selectors.causal import TESelector, CFSelector
@@ -46,7 +47,7 @@ all_handlers = {
 }
 
 # selectors_to_use = ["base", "corr", "f_val", "mi", "xgb", "lasso", "te"]
-features_suffixes = ["power"]
+# features_suffixes = ["power"]
 # metrics_suffixes = ["perf_abs", "perf_rel", "diff"]
 
 grid_scoring = "b_acc"
@@ -112,4 +113,17 @@ knn_mm = MetaModel(
             "algorithm": "auto",
             "p": 1,
         }
+)
+
+meta_learner = MetaLearner(
+        md_source=md_source,
+        opt_scoring=grid_scoring,
+        model_scoring=model_scoring,
+        features_folder="preprocessed",
+        metrics_folder="preprocessed",
+        opt_method=None,
+        opt_cv=5,
+        model_cv=10,
+        n_trials=50,
+        test_mode=False,
 )

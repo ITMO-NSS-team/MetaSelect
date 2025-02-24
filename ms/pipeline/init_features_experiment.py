@@ -1,9 +1,9 @@
 import random
 
-from ms.metadataset.metadata_sampler import MetadataSampler
-from ms.metaresearch.meta_learning import MetaLearner
-from ms.pipeline.pipeline_constants import *
 import numpy as np
+
+from ms.metadataset.metadata_sampler import MetadataSampler
+from ms.pipeline.pipeline_constants import *
 
 np.random.seed(seed)
 random.seed(seed)
@@ -16,22 +16,10 @@ f_sampler = MetadataSampler(
         test_mode=False
     )
 
-meta_learner = MetaLearner(
-        md_source=md_source,
-        opt_scoring=grid_scoring,
-        model_scoring=model_scoring,
-        features_folder="preprocessed",
-        metrics_folder="preprocessed",
-        opt_method=None,
-        opt_cv=5,
-        model_cv=10,
-        n_trials=50,
-        test_mode=False,
-    )
-
 selectors_to_use = ["base", "corr", "f_val", "mi", "xgb", "lasso", "rfe", "te", "cf"]
 selectors = [all_handlers[selector][1] for selector in selectors_to_use if selector != "rfe"]
 metrics_suffixes = ["perf_abs", "perf_rel", "diff"]
+features_suffixes = ["power"]
 
 if __name__ == "__main__":
     f_sampler.sample_data(
