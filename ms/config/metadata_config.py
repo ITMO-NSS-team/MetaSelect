@@ -27,3 +27,4 @@ class MetadataConfig:
     results_prefix: str = "results"
     splits_prefix: str = "splits"
     slices_prefix: str = "slices"
+    addition_prefix: str = "addition"

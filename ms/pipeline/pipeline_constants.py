@@ -16,6 +16,8 @@ seed = 42
 
 md_source = TabzillaSource()
 
+data_transform = "power"
+
 k_fold_splitter = KFold(n_splits=5, shuffle=True, random_state=seed)
 train_test_slitter = ShuffleSplit(n_splits=1, test_size=0.3, random_state=seed)
 
