@@ -110,8 +110,9 @@ class LassoSelector(SelectorHandler, ModelBased):
         lasso = LogisticRegression(
             penalty='l1',
             solver='liblinear',  # 'liblinear' or 'saga' for L1
-            C=0.1,
-            random_state=42
+            C=0.15,
+            random_state=42,
+            fit_intercept=True,
         )
 
         lasso.fit(X=x, y=y)
