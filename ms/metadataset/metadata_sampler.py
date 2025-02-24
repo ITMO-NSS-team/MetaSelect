@@ -153,19 +153,23 @@ class MetadataSampler(MetadataHandler):
             return
         samples_dict = {}
         additional_indexes = []
+        orig_indexes = []
         for i, f in enumerate(list(x_df.columns)):
             if f.split("___")[0] == add_suffix:
                 additional_indexes.append(i)
+            else:
+                orig_indexes.append(i)
 
         for i, percent in enumerate(percents):
             sample_size = int(len(additional_indexes) * percent)
             samples_dict[i] = {}
             for j in range (self.n_iter):
-                samples_dict[i][j] = sample(additional_indexes, sample_size)
+                sampled = sample(additional_indexes, sample_size)
+                samples_dict[i][j] = orig_indexes + sampled
 
         self.save_samples(
             data=samples_dict,
-            file_name=f"{self.config.addition_prefix}",
+            file_name=f"{self.config.slices_prefix}",
             inner_folders=[add_suffix]
         )
 
