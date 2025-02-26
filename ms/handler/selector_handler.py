@@ -97,6 +97,15 @@ class SelectorHandler(MetadataHandler, ABC):
                 inner_folders=[self.class_folder, "selection_data", metrics_suffix]
             )
             if not rewrite and res_path.exists():
+                df = pd.read_csv(res_path, index_col=0)
+                for n_iter in slices[f_slice]:
+                    results[f_slice][n_iter] = {}
+                    for fold in splits:
+                        results[f_slice][n_iter][fold] = {}
+                        for k in range(len(target_models)):
+                            idx = int(n_iter) * len(target_models) + k
+                            results[f_slice][n_iter][fold][target_models[k]] \
+                                = df.iloc[:, idx].dropna(how="any").index.tolist()
                 continue
             for n_iter in slices[f_slice]:
                 print(f"Iteration: {n_iter}")

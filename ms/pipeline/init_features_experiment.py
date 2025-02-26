@@ -37,7 +37,7 @@ if __name__ == "__main__":
     f_sampler.sample_data(
         feature_suffixes=["power"],
         target_suffix="perf_abs",
-        rewrite=True
+        rewrite=False
     )
 
     for features_suffix in features_suffixes:
