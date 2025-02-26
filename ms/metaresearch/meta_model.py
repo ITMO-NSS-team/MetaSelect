@@ -77,7 +77,8 @@ class MetaModel:
                 y_df=y.loc[:, target_model],
                 splits=splits,
                 slices=slices,
-                scoring=model_scoring
+                scoring=model_scoring,
+                target_model=target_model,
             )
             model_scores[target_model]["cv"] = cv_results
             if best_params is not None:
@@ -119,7 +120,7 @@ class MetaModel:
         return cv_results["test_score"].mean()
 
     @staticmethod
-    def custom_cv(estimator, x_df, y_df, splits, slices, scoring) -> dict:
+    def custom_cv(estimator, x_df, y_df, splits, slices, scoring, target_model) -> dict:
         res = {}
         for score_name, score_func in scoring.items():
             res[f"test_{score_name}"] = []
@@ -127,29 +128,14 @@ class MetaModel:
                 train = splits[i]["train"]
                 test = splits[i]["test"]
                 estimator.fit(
-                    x_df.iloc[train, :].loc[:, slices[i]],
+                    x_df.iloc[train, :].loc[:, slices[i][target_model]],
                     y_df.iloc[train]
                 )
                 res[f"test_{score_name}"].append(
                     score_func(
                         estimator=estimator,
-                        X=x_df.iloc[test, :].loc[:, slices[i]],
+                        X=x_df.iloc[test, :].loc[:, slices[i][target_model]],
                         y_true=y_df.iloc[test],
                     )
                 )
-        # for i in splits:
-        #     train = splits[i]["train"]
-        #     test = splits[i]["test"]
-        #     res[i] = {}
-        #
-        #     estimator.fit(
-        #         x_df.iloc[train, :].loc[:, slices[i]],
-        #         y_df.iloc[train]
-        #     )
-        #     for score_name, score_func in scoring.items():
-        #         res[i][f"test_{score_name}"] = score_func(
-        #             estimator=estimator,
-        #             X=x_df.iloc[test, :].loc[:, slices[i]],
-        #             y_true=y_df.iloc[test],
-        #         )
         return res

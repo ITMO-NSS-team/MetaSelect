@@ -2,7 +2,7 @@ import random
 
 from ms.metadataset.metadata_sampler import MetadataSampler
 from ms.metaresearch.meta_learning import MetaLearner
-from ms.pipeline_constants import *
+from ms.pipeline.pipeline_constants import *
 import numpy as np
 
 np.random.seed(seed)
@@ -29,7 +29,7 @@ meta_learner = MetaLearner(
         test_mode=False,
     )
 
-selectors_to_use = ["base", "corr", "f_val", "mi", "xgb", "lasso", "rfe", "te"]
+selectors_to_use = ["base", "corr", "f_val", "mi", "xgb", "lasso", "rfe", "te", "cf"]
 selectors = [all_handlers[selector][1] for selector in selectors_to_use if selector != "rfe"]
 metrics_suffixes = ["perf_abs", "perf_rel", "diff"]
 

@@ -58,6 +58,8 @@ class MetadataSampler(MetadataHandler):
             feature_suffixes: list[str],
             target_suffix: str,
             rewrite: bool = False,
+            are_additional: bool = False,
+            percents: list[float] | None = None,
     ) -> None:
         for feature_suffix in feature_suffixes:
             splits_dict = {}
@@ -86,24 +88,31 @@ class MetadataSampler(MetadataHandler):
                 inner_folders=[feature_suffix],
             )
 
-            self.make_samples(
-                feature_suffix=feature_suffix,
-                feature_dataset=x_df,
-                rewrite=rewrite,
-            )
-
+            if are_additional:
+                self.sample_uninformative(
+                    add_suffix=feature_suffix,
+                    percents=percents,
+                    rewrite=rewrite,
+                    x_df=x_df
+                )
+            else:
+                self.make_samples(
+                    processed_suffix=feature_suffix,
+                    feature_dataset=x_df,
+                    rewrite=rewrite,
+                )
 
 
     def make_samples(
             self,
-            feature_suffix: str,
+            processed_suffix: str,
             feature_dataset: pd.DataFrame,
             rewrite: bool = False,
     ) -> None:
         save_path = self.get_path(
             folder_name=self.config.sampler_folder,
             file_name=f"{self.config.slices_prefix}.json",
-            inner_folders=[feature_suffix],
+            inner_folders=[processed_suffix],
         )
         if not rewrite and save_path.exists():
             return
@@ -125,8 +134,41 @@ class MetadataSampler(MetadataHandler):
         self.save_samples(
             data=samples_dict,
             file_name=f"{self.config.slices_prefix}",
-            inner_folders=[feature_suffix]
+            inner_folders=[processed_suffix]
         )
+
+    def sample_uninformative(
+            self,
+            x_df: pd.DataFrame,
+            add_suffix: str,
+            percents: list[float],
+            rewrite: bool = False,
+    ) -> None:
+        save_path = self.get_path(
+            folder_name=self.config.sampler_folder,
+            file_name=f"{self.config.addition_prefix}.json",
+            inner_folders=[add_suffix],
+        )
+        if not rewrite and save_path.exists():
+            return
+        samples_dict = {}
+        additional_indexes = []
+        for i, f in enumerate(list(x_df.columns)):
+            if f.split("___")[0] == add_suffix:
+                additional_indexes.append(i)
+
+        for i, percent in enumerate(percents):
+            sample_size = int(len(additional_indexes) * percent)
+            samples_dict[i] = {}
+            for j in range (self.n_iter):
+                samples_dict[i][j] = sample(additional_indexes, sample_size)
+
+        self.save_samples(
+            data=samples_dict,
+            file_name=f"{self.config.addition_prefix}",
+            inner_folders=[add_suffix]
+        )
+
 
 if __name__ == "__main__":
     k_fold_splitter = KFold(n_splits=5, shuffle=True, random_state=42)

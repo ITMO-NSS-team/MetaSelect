@@ -1,7 +1,7 @@
 from abc import abstractmethod, ABC
 
 import pandas as pd
-from sklearn.linear_model import LassoCV
+from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
 
 from ms.handler.metadata_source import MetadataSource
@@ -107,14 +107,20 @@ class LassoSelector(SelectorHandler, ModelBased):
             y: NDArrayFloatT,
             features_names: list[str],
     ) -> pd.DataFrame:
-        lasso = LassoCV()
-        lasso.set_params(**self.params)
+        lasso = LogisticRegression(
+            penalty='l1',
+            solver='liblinear',  # 'liblinear' or 'saga' for L1
+            C=0.15,
+            random_state=42,
+            fit_intercept=True,
+        )
 
         lasso.fit(X=x, y=y)
         res_df = pd.DataFrame(index=features_names)
-        res_df["lasso_fi"] = lasso.coef_
+        lasso_coef = lasso.coef_.flatten()
+        res_df["lasso_fi"] = lasso_coef
 
-        for i, coef in enumerate(lasso.coef_):
+        for i, coef in enumerate(lasso_coef):
             if abs(coef) <= self.coef_threshold:
                 res_df.iloc[i, 0] = None
 

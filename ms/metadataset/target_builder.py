@@ -244,15 +244,10 @@ class TargetDiffBuilder(TargetBuilder):
         models = [max_res[key][0] for key in max_res]
 
         diff_df = pd.DataFrame(index=metrics_dataset.index)
+        res = metrics_dataset[models[0]] - metrics_dataset[models[1]]
         diff_df[f"diff__{models[0]}__{models[1]}"] \
-            = metrics_dataset[models[0]] - metrics_dataset[models[1]]
+            = [0 if r > 0 else 1 for r in res]
 
-        disc = KBinsDiscretizer(
-            n_bins=self.n_bins,
-            encode="ordinal",
-            strategy=self.strategy,
-        )
-        diff_df.iloc[:, 0] = disc.fit_transform(X=diff_df)
         self._col_name = diff_df.columns[0]
 
         return diff_df.to_numpy(copy=True)

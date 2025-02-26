@@ -66,7 +66,9 @@ class SelectorHandler(MetadataHandler, ABC):
 
         features = self.load_features(suffix=features_suffix)
         metrics = self.load_metrics(suffix=metrics_suffix)
+        target_models = [col for col in metrics.columns]
         results = {}
+        errors = {}
 
         json_path = self.get_path(
             folder_name=features_suffix,
@@ -88,14 +90,23 @@ class SelectorHandler(MetadataHandler, ABC):
         for f_slice in slices:
             print(f"Slice: {f_slice}")
             results[f_slice] = {}
-            # res_list = []
-            # res_path = self.get_path(
-            #     folder_name=features_suffix,
-            #     file_name=f"{sample}.csv",
-            #     inner_folders=[self.class_folder, "selection_data", "samples"]
-            # )
-            # if not rewrite and res_path.exists():
-            #     continue
+            res_list = []
+            res_path = self.get_path(
+                folder_name=features_suffix,
+                file_name=f"{f_slice}.csv",
+                inner_folders=[self.class_folder, "selection_data", metrics_suffix]
+            )
+            if not rewrite and res_path.exists():
+                df = pd.read_csv(res_path, index_col=0)
+                for n_iter in slices[f_slice]:
+                    results[f_slice][n_iter] = {}
+                    for fold in splits:
+                        results[f_slice][n_iter][fold] = {}
+                        for k in range(len(target_models)):
+                            idx = int(n_iter) * len(target_models) + k
+                            results[f_slice][n_iter][fold][target_models[k]] \
+                                = df.iloc[:, idx].dropna(how="any").index.tolist()
+                continue
             for n_iter in slices[f_slice]:
                 print(f"Iteration: {n_iter}")
                 results[f_slice][n_iter] = {}
@@ -109,20 +120,31 @@ class SelectorHandler(MetadataHandler, ABC):
                         ],
                         metrics_dataset=metrics.iloc[train, :],
                     )
-                    # df.columns = [f"{col}_{n_iter}" for col in df.columns]
-                    # res_list.append(df)
-                    results[f_slice][n_iter][fold] = list(df.index)
-            # res_df = pd.concat(res_list, axis=1)
-            # self.save(
-            #     data_frame=res_df,
-            #     folder_name="",
-            #     file_name="",
-            #     path=res_path,
-            # )
+                    results[f_slice][n_iter][fold] = {}
+                    for k, target_model in enumerate(target_models):
+                        selected_features = df.iloc[:, k].dropna(how="any").index.tolist()
+                        if len(selected_features) == 0:
+                            errors[f"{f_slice}_{n_iter}_{fold}_{target_model}"] = 0
+                        results[f_slice][n_iter][fold][target_model] = selected_features
+                    df.columns = [f"{col}_{n_iter}" for col in df.columns]
+                    res_list.append(df)
+            res_df = pd.concat(res_list, axis=1)
+            self.save(
+                data_frame=res_df,
+                folder_name="",
+                file_name="",
+                path=res_path,
+            )
         self.save_json(
             data=results,
             folder_name=features_suffix,
             file_name=f"{metrics_suffix}.json",
+            inner_folders=[self.class_folder, "selection_data"]
+        )
+        self.save_json(
+            data=errors,
+            folder_name=features_suffix,
+            file_name=f"{metrics_suffix}_errors.json",
             inner_folders=[self.class_folder, "selection_data"]
         )
         return SelectorData(
