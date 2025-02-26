@@ -1,0 +1,403 @@
+Target,MtL,FS method,Importance fraction score,Selection number,F1 score
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",correlation,0.4970313098921895,19,0.6521739130434783
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",correlation,0.6748054623603821,19,0.55
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",correlation,0.46641270936883883,19,0.6666666666666666
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",counterfactual,1.0,5,0.5789473684210527
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",counterfactual,1.0000001192092896,5,0.6
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",counterfactual,1.0000000000000002,5,0.631578947368421
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",f_value,0.4482912830212971,19,0.6190476190476191
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",f_value,0.6569426655769348,19,0.6
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",f_value,0.4204748715228365,19,0.6285714285714286
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",mutual_info,0.6387306772871458,13,0.5555555555555556
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",mutual_info,0.7134584784507751,13,0.4444444444444444
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",mutual_info,0.5180561367860534,13,0.24242424242424243
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",xgb,0.649188643002324,11,0.6153846153846154
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",xgb,0.8079807758331299,11,0.6285714285714286
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",xgb,0.5897134864613326,11,0.4117647058823529
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",lasso,0.5977494947557672,11,0.5365853658536586
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",lasso,0.6568774580955505,11,0.5945945945945946
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",lasso,0.6235366200263919,11,0.6153846153846154
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",treatment_effect,0.40175187655621336,25,0.5714285714285714
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",treatment_effect,0.5362629294395447,25,0.5555555555555556
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",treatment_effect,0.28913477017244,25,0.5142857142857142
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",base,0.15444929604469423,123,0.5714285714285714
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",base,0.4716600179672241,123,0.65
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",base,0.15459384959753528,123,0.6153846153846154
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",correlation,0.44315660694340375,24,0.55
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",correlation,0.44924384355545044,24,0.5853658536585366
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",correlation,0.4820658006227377,24,0.47368421052631576
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",counterfactual,0.6437717536554107,13,0.47619047619047616
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",counterfactual,0.6240938901901245,13,0.41025641025641024
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",counterfactual,0.5966854371880495,13,0.5
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",f_value,0.36260446161477744,30,0.6
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",f_value,0.36587804555892944,30,0.6190476190476191
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",f_value,0.3781639616959943,30,0.6363636363636364
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",mutual_info,0.5895346411144744,13,0.6086956521739131
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",mutual_info,0.6966561675071716,13,0.5
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",mutual_info,0.6181949425350991,13,0.6
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",xgb,0.6862478644429384,8,0.6521739130434783
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",xgb,0.8006845116615295,8,0.6046511627906976
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",xgb,0.7575001173490324,8,0.5333333333333333
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",lasso,0.6490193656134065,11,0.6
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",lasso,0.6239683032035828,11,0.6
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",lasso,0.7035344158581841,11,0.5581395348837209
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",treatment_effect,0.3752979511159656,25,0.5853658536585366
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",treatment_effect,0.42259645462036133,25,0.6153846153846154
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",treatment_effect,0.35516393887017417,25,0.6
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",base,0.15464189816901538,123,0.75
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",base,0.29481804370880127,123,0.6363636363636364
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",base,0.16115712186528108,123,0.5945945945945946
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",correlation,0.32675918198265097,29,0.43243243243243246
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",correlation,0.4767952561378479,29,0.36363636363636365
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",correlation,0.3241994298376524,29,0.5
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",counterfactual,0.8105012922043562,8,0.26666666666666666
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",counterfactual,0.785461962223053,8,0.47058823529411764
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",counterfactual,0.8435951065786059,8,0.16666666666666666
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",f_value,0.27314676447465275,33,0.42105263157894735
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",f_value,0.5091807842254639,33,0.42424242424242425
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",f_value,0.2951427814271288,33,0.6285714285714286
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",mutual_info,0.6131232584123205,13,0.5641025641025641
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",mutual_info,0.6325406432151794,13,0.6
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",mutual_info,0.640750848899146,13,0.5555555555555556
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",xgb,1.0,5,0.47368421052631576
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",xgb,1.0,5,0.47368421052631576
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",xgb,1.0000000000000002,5,0.45161290322580644
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",lasso,0.6159169555329979,11,0.42857142857142855
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",lasso,0.6231954097747803,11,0.30303030303030304
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",lasso,0.6086993358926927,11,0.5
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",treatment_effect,0.35470689413574336,25,0.47619047619047616
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",treatment_effect,0.4913899302482605,25,0.4878048780487805
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",treatment_effect,0.3646527286188474,25,0.375
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",base,0.14364727673533406,123,0.5714285714285714
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",base,0.34564805030822754,123,0.5142857142857142
+diff__rtdl_ResNet__XGBoost,"KNeighborsClassifier(leaf_size=40, n_neighbors=6, p=1)",base,0.15037588512082395,123,0.4
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",rfe,0.1749258357587252,61,0.5
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",rfe,0.3869825601577759,61,0.45714285714285713
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",rfe,0.19495150316515134,61,0.5853658536585366
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",rfe,0.35381659865379333,61,0.5365853658536586
+diff__rtdl_ResNet__XGBoost,"MLPClassifier(activation='logistic', alpha=0.05, hidden_layer_sizes=25,
+              learning_rate='adaptive', learning_rate_init=0.05, max_iter=100,
+              solver='lbfgs')",rfe,0.16378360581116908,61,0.5853658536585366
+diff__rtdl_ResNet__XGBoost,"XGBClassifier(base_score=None, booster=None, callbacks=None,
+              colsample_bylevel=None, colsample_bynode=None,
+              colsample_bytree=None, device=None, early_stopping_rounds=None,
+              enable_categorical=False, eval_metric='merror',
+              feature_types=None, gamma=None, grow_policy=None,
+              importance_type=None, interaction_constraints=None,
+              learning_rate=0.1, max_bin=None, max_cat_threshold=None,
+              max_cat_to_onehot=None, max_delta_step=None, max_depth=7,
+              max_leaves=None, min_child_weight=None, missing=nan,
+              monotone_constraints=None, multi_strategy=None, n_estimators=50,
+              n_jobs=None, num_parallel_tree=None, random_state=None, ...)",rfe,0.39138370752334595,61,0.6382978723404256
