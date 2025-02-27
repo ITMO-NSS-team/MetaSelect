@@ -5,14 +5,14 @@ from pathlib import Path
 
 import pandas as pd
 
-from ms.config.metadata_config import MetadataConfig
+from ms.config.navigation_config import NavigationConfig
 from ms.handler.handler_info import HandlerInfo
-from ms.handler.metadata_source import SourceBased
+from ms.handler.data_source import SourceBased
 from ms.utils.debug import Debuggable
 from ms.utils.navigation import pjoin
 
 
-class MetadataHandler(SourceBased, Debuggable, ABC):
+class DataHandler(SourceBased, Debuggable, ABC):
     def __init__(
             self,
             features_folder: str,
@@ -22,7 +22,7 @@ class MetadataHandler(SourceBased, Debuggable, ABC):
         super().__init__(
             test_mode=test_mode,
         )
-        self._config = MetadataConfig()
+        self._config = NavigationConfig()
 
         if metrics_folder is None:
             _metrics_folder = features_folder
@@ -34,11 +34,11 @@ class MetadataHandler(SourceBased, Debuggable, ABC):
         }
 
     @property
-    def config(self) -> MetadataConfig:
+    def config(self) -> NavigationConfig:
         return self._config
 
     @config.setter
-    def config(self, config: MetadataConfig) -> None:
+    def config(self, config: NavigationConfig) -> None:
         self._config = config
 
     @property
@@ -259,7 +259,7 @@ class MetadataHandler(SourceBased, Debuggable, ABC):
         return res
 
 
-class FeaturesHandler(MetadataHandler):
+class FeaturesHandler(DataHandler):
     def handle_features(
             self,
             load_suffix: str | None = None,
@@ -281,7 +281,7 @@ class FeaturesHandler(MetadataHandler):
     def __handle_features__(self, features_dataset: pd.DataFrame) -> tuple[pd.DataFrame, HandlerInfo]:
         pass
 
-class MetricsHandler(MetadataHandler):
+class MetricsHandler(DataHandler):
     def handle_metrics(
             self,
             load_suffix: str | None = None,

@@ -2,15 +2,15 @@ from abc import ABC, abstractmethod
 
 import pandas as pd
 
-from ms.handler.metadata_handler import MetadataHandler
-from ms.handler.metadata_source import MetadataSource
+from ms.handler.data_handler import DataHandler
+from ms.handler.data_source import DataSource
 from ms.metaresearch.selector_data import SelectorData
 from ms.utils.typing import NDArrayFloatT
 
 
-class SelectorHandler(MetadataHandler, ABC):
+class SelectorHandler(DataHandler, ABC):
     @property
-    def source(self) -> MetadataSource:
+    def source(self) -> DataSource:
         return self._md_source
 
     @property
@@ -26,7 +26,7 @@ class SelectorHandler(MetadataHandler, ABC):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "processed",
             metrics_folder: str | None = "processed",
             out_type: str = "multi",
