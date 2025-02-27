@@ -5,15 +5,15 @@ from typing import Callable
 
 import pandas as pd
 
-from ms.handler.metadata_handler import MetadataHandler
-from ms.handler.metadata_source import MetadataSource
+from ms.handler.data_handler import DataHandler
+from ms.handler.data_source import DataSource
 from ms.metaresearch.meta_model import MetaModel
 from ms.metaresearch.selector_data import SelectorData
 from ms.metaresearch.selectors.model_wrapper import RFESelector
 from ms.utils.navigation import pjoin
 
 
-class MetaLearner(MetadataHandler):
+class MetaLearner(DataHandler):
     @property
     def class_name(self) -> str:
         return "meta_learner"
@@ -23,7 +23,7 @@ class MetaLearner(MetadataHandler):
         return self.config.meta_learning
 
     @property
-    def source(self) -> MetadataSource:
+    def source(self) -> DataSource:
         return self._md_source
 
     @property
@@ -39,7 +39,7 @@ class MetaLearner(MetadataHandler):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             opt_scoring: str,
             model_scoring: dict[str, Callable],
             features_folder: str = "preprocessed",
@@ -84,12 +84,12 @@ class MetaLearner(MetadataHandler):
                 file_name=f"{self.config.splits_prefix}",
                 inner_folders=[feature_suffix]
             )
-            for s_data in selectors:
-                selector = s_data
-                if selector.features_suffix != feature_suffix:
-                    continue
-                print(f"Selector: {selector.name}")
+            for s_name in selector_names:
                 for target_suffix in target_suffixes:
+                    selector = selectors[s_name][feature_suffix][target_suffix]
+                    if selector.features_suffix != feature_suffix:
+                        continue
+                    print(f"Selector: {selector.name}")
                     print(f"Target file: metrics__{target_suffix}.csv")
                     y_df = self.load_metrics(suffix=target_suffix)
                     for model in models:
@@ -215,10 +215,14 @@ class MetaLearner(MetadataHandler):
             selector_names: list[str],
             all_data: bool = False,
     ) -> list[SelectorData]:
-        selectors = []
+        selectors = {}
         for features_suffix in features_suffixes:
             for metrics_suffix in metrics_suffixes:
                 for s_name in selector_names:
+                    if selectors.get(s_name) is None:
+                        selectors[s_name] = {}
+                    if selectors[s_name].get(features_suffix) is None:
+                        selectors[s_name][features_suffix] = {}
                     if s_name != "rfe" or (s_name == "rfe" and all_data):
                         results = self.load_json(
                             folder_name=features_suffix,
@@ -229,7 +233,7 @@ class MetaLearner(MetadataHandler):
                             ],
                             to_save=True,
                         )
-                        selectors.append(
+                        selectors[s_name][features_suffix][metrics_suffix] = (
                             SelectorData(
                                 name=s_name,
                                 features_suffix=features_suffix,
@@ -238,7 +242,7 @@ class MetaLearner(MetadataHandler):
                             )
                         )
                     else:
-                        selectors.append(
+                        selectors[s_name][features_suffix][metrics_suffix] = (
                             SelectorData(
                                 name=s_name,
                                 features_suffix=features_suffix,
