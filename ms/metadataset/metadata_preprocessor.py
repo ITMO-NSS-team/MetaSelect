@@ -11,6 +11,28 @@ from ms.utils.metadata import remove_constant_features
 
 
 class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
+    """
+    A class for preprocessing metadata features and metrics datasets.
+
+    This class is responsible for handling the preprocessing of features and metrics datasets,
+    including loading, filtering, and processing data based on specified suffixes. It provides
+    methods to check for suffixes, retrieve class information, and manage the paths for
+    preprocessed data and resources.
+
+    Methods:
+        has_suffix: Determines if the current object has a specific suffix.
+        class_name: Return the name of the class.
+        class_folder: Retrieve the path to the preprocessed folder.
+        source: Retrieve the metadata source.
+        has_index: Check the availability of features and metrics.
+        save_path: Retrieve the path to the resources.
+        __init__: Initializes an instance of the class.
+        get_common_datasets: Retrieve common datasets based on specified suffixes for features and metrics.
+        preprocess: Preprocesses features and metrics datasets.
+        __handle_features__: Processes the given features dataset based on common datasets.
+        __handle_metrics__: Processes the given metrics dataset and returns processed dataset and handler information.
+        __process_features__: Processes the features of the given dataset.
+    """
     scalers = {
         "standard": StandardScaler,
         "minmax": MinMaxScaler,
@@ -21,22 +43,69 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
     @property
     @abstractmethod
     def has_suffix(self) -> bool:
+        """
+Determines if the current object has a specific suffix.
+
+    This method checks whether the object meets certain criteria 
+    to have a suffix. The exact criteria are defined within the 
+    method's implementation.
+
+    Returns:
+        bool: True if the object has the specified suffix, 
+              False otherwise.
+    """
         pass
 
     @property
     def class_name(self) -> str:
+        """
+Return the name of the class.
+
+    This method returns a string that represents the name of the class 
+    to which the instance belongs.
+
+    Returns:
+        str: The name of the class, which is "preprocessor".
+    """
         return "preprocessor"
 
     @property
     def class_folder(self) -> str:
+        """
+Retrieve the path to the preprocessed folder.
+
+    This method accesses the configuration object associated with the instance
+    and returns the path to the folder where preprocessed data is stored.
+
+    Returns:
+        str: The path to the preprocessed folder.
+    """
         return self.config.preprocessed_folder
 
     @property
     def source(self) -> MetadataSource:
+        """
+Retrieve the metadata source.
+
+    This method returns the metadata source associated with the current instance.
+
+    Returns:
+        MetadataSource: The metadata source object.
+    """
         return self._md_source
 
     @property
     def has_index(self) -> dict:
+        """
+Check the availability of features and metrics.
+
+    This method returns a dictionary indicating whether features and metrics 
+    are available in the current context.
+
+    Returns:
+        dict: A dictionary with keys 'features' and 'metrics', both set to 
+        True, indicating their availability.
+    """
         return {
             "features": True,
             "metrics": True,
@@ -44,6 +113,15 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
 
     @property
     def save_path(self) -> str:
+        """
+Retrieve the path to the resources.
+
+    This method returns the path to the resources defined in the 
+    configuration of the instance.
+
+    Returns:
+        str: The path to the resources.
+    """
         return self.config.resources
 
     def __init__(
@@ -54,6 +132,22 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
             to_scale: list[str] | None = None,
             test_mode: bool = False,
     ):
+        """
+Initializes an instance of the class.
+
+    This constructor initializes the object with the provided metadata source, 
+    feature and metrics folder paths, a list of features to scale, and a test mode flag.
+
+    Args:
+        md_source (MetadataSource): The source of metadata to be used.
+        features_folder (str, optional): The folder containing feature data. Defaults to "filtered".
+        metrics_folder (str | None, optional): The folder containing metrics data. Defaults to "target".
+        to_scale (list[str] | None, optional): A list of features to scale. Defaults to an empty list if None.
+        test_mode (bool, optional): A flag indicating whether the object is in test mode. Defaults to False.
+
+    Returns:
+        None
+    """
         super().__init__(
             features_folder=features_folder,
             metrics_folder=metrics_folder,
@@ -68,6 +162,19 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
             feature_suffix: str = None,
             metrics_suffix: str = None
     ) -> list[str]:
+        """
+Retrieve common datasets based on specified suffixes for features and metrics.
+
+    This method loads datasets for features and metrics, filters them based on the provided
+    suffixes, and returns a list of datasets that are common to both features and metrics.
+
+    Args:
+        feature_suffix (str, optional): The suffix to filter feature datasets. Defaults to None.
+        metrics_suffix (str, optional): The suffix to filter metric datasets. Defaults to None.
+
+    Returns:
+        list[str]: A list of dataset names that are common to both features and metrics.
+    """
         features_datasets = self.load_features(suffix=feature_suffix).index
         metrics_datasets = self.load_metrics(suffix=metrics_suffix).index
         return list(set(features_datasets) & set(metrics_datasets))
@@ -116,8 +223,38 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
 
 
 class ScalePreprocessor(MetadataPreprocessor):
+    """
+    A class for preprocessing features by scaling and handling outliers.
+
+    This class is designed to process datasets by removing outliers and scaling features 
+    according to specified parameters. It provides methods to check for suffixes and 
+    to process the features of a dataset.
+
+    Methods:
+        has_suffix: Check if the object has a specific suffix.
+        __init__: Initializes an instance of the class.
+        __process_features__: Processes the features of the given dataset by removing outliers and scaling.
+
+    Attributes:
+        md_source (MetadataSource): The source of metadata to be used.
+        features_folder (str): The folder containing feature data.
+        metrics_folder (str | None): The folder containing metrics data.
+        to_scale (list[str] | None): A list of features to scale.
+        perf_type (str): The type of performance measurement.
+        remove_outliers (bool): Flag indicating whether to remove outliers.
+        outlier_modifier (float): A modifier to apply when handling outliers.
+        test_mode (bool): Flag indicating whether to run in test mode.
+    """
     @property
     def has_suffix(self) -> bool:
+        """
+Check if the object has a specific suffix.
+
+    This method determines whether the object meets the criteria for having a suffix.
+
+    Returns:
+        bool: True if the object has the specified suffix, False otherwise.
+    """
         return True
 
     def __init__(
@@ -131,6 +268,26 @@ class ScalePreprocessor(MetadataPreprocessor):
             outlier_modifier: float = 1.0,
             test_mode: bool = False,
     ):
+        """
+Initializes an instance of the class.
+
+    This constructor sets up the necessary parameters for the class, including
+    metadata source, folder paths for features and metrics, scaling options,
+    performance type, outlier handling, and test mode configuration.
+
+    Args:
+        md_source (MetadataSource): The source of metadata to be used.
+        features_folder (str, optional): The folder containing feature data. Defaults to "filtered".
+        metrics_folder (str | None, optional): The folder containing metrics data. Defaults to "target".
+        to_scale (list[str] | None, optional): A list of features to scale. Defaults to None.
+        perf_type (str, optional): The type of performance measurement, either "abs" for absolute or "rel" for relative. Defaults to "abs".
+        remove_outliers (bool, optional): Flag indicating whether to remove outliers. Defaults to False.
+        outlier_modifier (float, optional): A modifier to apply when handling outliers. Defaults to 1.0.
+        test_mode (bool, optional): Flag indicating whether to run in test mode. Defaults to False.
+
+    Returns:
+        None
+    """
         super().__init__(
             md_source=md_source,
             features_folder=features_folder,
@@ -181,8 +338,41 @@ class ScalePreprocessor(MetadataPreprocessor):
 
 
 class CorrelationPreprocessor(MetadataPreprocessor):
+    """
+    A class for preprocessing features in a dataset to reduce multicollinearity 
+    by removing collinear variables based on correlation and Variance Inflation Factor (VIF).
+
+    This class provides methods to initialize the preprocessor, process features 
+    to eliminate collinearity, compute VIF values, and check for specific suffixes.
+
+    Methods:
+        __init__(md_source, features_folder='preprocessed', metrics_folder='preprocessed', 
+                 to_scale=None, corr_method='spearman', corr_value_threshold=0.9, 
+                 vif_value_threshold=None, vif_count_threshold=None, test_mode=False):
+            Initializes an instance of the class with specified parameters.
+
+        has_suffix():
+            Check if the object has a specific suffix.
+
+        __process_features__(processed_dataset):
+            Processes features in the given dataset to remove collinear variables 
+            and reduce multicollinearity based on VIF.
+
+        compute_vif(dataset):
+            Compute the Variance Inflation Factor (VIF) for each feature in the dataset.
+    """
     @property
     def has_suffix(self) -> bool:
+        """
+Check if the object has a specific suffix.
+
+    This method determines whether the object meets certain criteria 
+    related to suffixes. The specific implementation details may vary 
+    based on the context in which this method is used.
+
+    Returns:
+        bool: Always returns False in the current implementation.
+    """
         return False
 
     def __init__(
@@ -197,6 +387,28 @@ class CorrelationPreprocessor(MetadataPreprocessor):
             vif_count_threshold: float | None = None,
             test_mode: bool = False,
     ):
+        """
+Initializes an instance of the class.
+
+    This constructor sets up the necessary parameters for the class, including
+    metadata source, folder paths for features and metrics, scaling options,
+    correlation method and thresholds, and VIF (Variance Inflation Factor) 
+    thresholds. It also allows for a test mode to be activated.
+
+    Args:
+        md_source (MetadataSource): The source of metadata to be used.
+        features_folder (str, optional): The folder containing preprocessed features. Defaults to "preprocessed".
+        metrics_folder (str | None, optional): The folder containing preprocessed metrics. Defaults to "preprocessed".
+        to_scale (list[str] | None, optional): A list of features to scale. Defaults to None.
+        corr_method (str, optional): The method used for correlation calculation. Defaults to "spearman".
+        corr_value_threshold (float, optional): The threshold for correlation values. Defaults to 0.9.
+        vif_value_threshold (float | None, optional): The threshold for VIF values. Defaults to None.
+        vif_count_threshold (float | None, optional): The threshold for the count of VIF values. Defaults to None.
+        test_mode (bool, optional): Flag to indicate if the instance is in test mode. Defaults to False.
+
+    Returns:
+        None
+    """
         super().__init__(
             md_source=md_source,
             features_folder=features_folder,
