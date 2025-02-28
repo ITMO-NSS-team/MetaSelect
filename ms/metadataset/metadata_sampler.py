@@ -98,7 +98,7 @@ class DataSampler(DataHandler):
                 n_iter=n_iter,
             )
 
-    def merge_uninformative_features(
+    def slice_additional_features(
             self,
             feature_suffixes: list[str],
             rewrite: bool = False,
