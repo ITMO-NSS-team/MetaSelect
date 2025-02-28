@@ -9,62 +9,12 @@ from ms.utils.typing import NDArrayFloatT
 
 
 class SelectorHandler(MetadataHandler, ABC):
-    """
-    A class to handle feature selection and data processing for machine learning tasks.
-
-    This class provides methods to retrieve metadata sources, check the availability of features 
-    and metrics, save results, and perform feature selection based on provided datasets.
-
-    Methods:
-        __init__(md_source, features_folder='processed', metrics_folder='processed', 
-                 out_type='multi', test_mode=False):
-            Initializes an instance of the class.
-        
-        source():
-            Retrieve the metadata source.
-        
-        has_index():
-            Check the availability of features and metrics.
-        
-        save_path():
-            Retrieve the results path from the configuration.
-        
-        handle_data(x, y, features_names):
-            Processes input data and returns a DataFrame.
-        
-        perform(features_suffix, metrics_suffix, rewrite=False):
-            Perform feature selection based on provided metrics and features.
-        
-        __perform__(features_dataset, metrics_dataset):
-            Executes the main processing logic based on the provided datasets.
-        
-        __multioutput_runner__(x, y, features_names, models_names):
-            Runs multiple models on the provided data and returns a DataFrame of results.
-    """
     @property
     def source(self) -> MetadataSource:
-        """
-Retrieve the metadata source.
-
-    This method returns the metadata source associated with the current instance.
-
-    Returns:
-        MetadataSource: The metadata source object.
-    """
         return self._md_source
 
     @property
     def has_index(self) -> dict[str, bool]:
-        """
-Check the availability of features and metrics.
-
-    This method returns a dictionary indicating whether certain
-    features and metrics are available.
-
-    Returns:
-        dict[str, bool]: A dictionary with keys 'features' and 'metrics',
-        both set to True, indicating their availability.
-    """
         return {
             "features": True,
             "metrics": True
@@ -72,15 +22,6 @@ Check the availability of features and metrics.
 
     @property
     def save_path(self) -> str:
-        """
-Retrieve the results path from the configuration.
-
-    This method accesses the configuration object associated with the instance
-    and returns the path where results are to be saved.
-
-    Returns:
-        str: The path to the results directory as specified in the configuration.
-    """
         return self.config.results_path
 
     def __init__(
@@ -91,22 +32,6 @@ Retrieve the results path from the configuration.
             out_type: str = "multi",
             test_mode: bool = False
     ) -> None:
-        """
-Initializes an instance of the class.
-
-    This constructor initializes the object with the provided metadata source,
-    features folder, metrics folder, output type, and test mode settings.
-
-    Args:
-        md_source (MetadataSource): The source of metadata to be used.
-        features_folder (str, optional): The folder where processed features are stored. Defaults to "processed".
-        metrics_folder (str | None, optional): The folder where processed metrics are stored. Defaults to "processed".
-        out_type (str, optional): The type of output to be generated. Defaults to "multi".
-        test_mode (bool, optional): Flag indicating whether the instance is in test mode. Defaults to False.
-
-    Returns:
-        None
-    """
         super().__init__(
             features_folder=features_folder,
             metrics_folder=metrics_folder,
@@ -130,24 +55,6 @@ Initializes an instance of the class.
             metrics_suffix: str,
             rewrite: bool = False,
     ) -> SelectorData:
-        """
-Perform feature selection based on provided metrics and features.
-
-    This method loads slices and splits of data, processes the features and metrics,
-    and performs feature selection for each slice and iteration. It can optionally 
-    rewrite existing results if specified. The results and any errors encountered 
-    during processing are saved in JSON format.
-
-    Args:
-        features_suffix (str): The suffix to identify the features dataset.
-        metrics_suffix (str): The suffix to identify the metrics dataset.
-        rewrite (bool, optional): Flag indicating whether to overwrite existing results. 
-                                  Defaults to False.
-
-    Returns:
-        SelectorData: An object containing the results of the feature selection process, 
-                       including the selected features for each slice and iteration.
-    """
         slices = self.load_samples(
             file_name=f"{self.config.slices_prefix}",
             inner_folders=[features_suffix]
