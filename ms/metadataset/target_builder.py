@@ -5,14 +5,14 @@ import pandas as pd
 from sklearn.preprocessing import KBinsDiscretizer
 
 from ms.handler.handler_info import HandlerInfo
-from ms.handler.metadata_handler import MetricsHandler
-from ms.handler.metadata_source import MetadataSource, TabzillaSource
+from ms.handler.data_handler import MetricsHandler
+from ms.handler.data_source import DataSource
 from ms.utils.typing import NDArrayFloatT
 
 
 class TargetBuilder(MetricsHandler, ABC):
     @property
-    def source(self) -> MetadataSource:
+    def source(self) -> DataSource:
         return self._md_source
 
     @property
@@ -32,7 +32,7 @@ class TargetBuilder(MetricsHandler, ABC):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "filtered",
             metrics_folder: str | None = "filtered",
             test_mode: bool = False,
@@ -58,12 +58,8 @@ class TargetBuilder(MetricsHandler, ABC):
         target_array = self.__get_target__(
             metrics_dataset=metric_results
         )
-        target_cols = self.__get_col_names__(
-            metrics_dataset=metric_results
-        )
         handler_info = HandlerInfo(suffix=self.__get_suffix__())
-        return (pd.DataFrame(target_array, columns=target_cols, index=metric_results.index),
-                handler_info)
+        return target_array, handler_info
 
     def __rearrange_dataset__(self, metrics_dataset: pd.DataFrame) -> pd.DataFrame:
         return metrics_dataset.pivot_table(
@@ -74,11 +70,7 @@ class TargetBuilder(MetricsHandler, ABC):
         )
 
     @abstractmethod
-    def __get_target__(self, metrics_dataset: pd.DataFrame) -> np.ndarray:
-        pass
-
-    @abstractmethod
-    def __get_col_names__(self, metrics_dataset: pd.DataFrame) -> list[str]:
+    def __get_target__(self, metrics_dataset: pd.DataFrame) -> pd.DataFrame:
         pass
 
     @abstractmethod
@@ -93,7 +85,7 @@ class TargetRawBuilder(TargetBuilder):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "filtered",
             metrics_folder: str | None = "filtered",
             test_mode: bool = False,
@@ -111,12 +103,8 @@ class TargetRawBuilder(TargetBuilder):
             alg_name=alg_name,
         )
 
-    def __get_target__(self, metrics_dataset: pd.DataFrame) -> np.ndarray:
-        target_raw = metrics_dataset.to_numpy()
-        return target_raw
-
-    def __get_col_names__(self, metrics_dataset: pd.DataFrame) -> list[str]:
-        return metrics_dataset.columns
+    def __get_target__(self, metrics_dataset: pd.DataFrame) -> pd.DataFrame:
+        return metrics_dataset
 
     def __get_suffix__(self) -> str:
         return self.class_name
@@ -129,7 +117,7 @@ class TargetPerfBuilder(TargetBuilder):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "filtered",
             metrics_folder: str | None = "filtered",
             test_mode: bool = False,
@@ -153,7 +141,7 @@ class TargetPerfBuilder(TargetBuilder):
         self.n_bins = n_bins
         self.strategy = strategy
 
-    def __get_target__(self, metrics_dataset: pd.DataFrame) -> np.ndarray:
+    def __get_target__(self, metrics_dataset: pd.DataFrame) -> pd.DataFrame:
         target_perf = metrics_dataset.to_numpy(copy=True)
         target_perf = np.where(np.isnan(target_perf), -np.inf, target_perf)
 
@@ -164,13 +152,11 @@ class TargetPerfBuilder(TargetBuilder):
         else:
             raise ValueError(f"Unsupported performance metric: {self.perf_type}")
 
-        return target_perf
-
-    def __get_col_names__(self, metrics_dataset: pd.DataFrame) -> list[str]:
-        cols = []
-        for alg_name in metrics_dataset.columns:
-            cols.append(f"{alg_name}__{self.perf_type}perf")
-        return cols
+        return pd.DataFrame(
+            data=target_perf,
+            index=metrics_dataset.index,
+            columns=metrics_dataset.columns
+        )
 
     def __get_suffix__(self) -> str:
         return f"{self.class_name}_{self.perf_type}"
@@ -208,7 +194,7 @@ class TargetDiffBuilder(TargetBuilder):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             classes: list[str],
             model_classes: dict[str, str],
             features_folder: str = "filtered",
@@ -217,8 +203,6 @@ class TargetDiffBuilder(TargetBuilder):
             metric_name: str = "F1__test",
             index_name: str = "dataset_name",
             alg_name: str = "alg_name",
-            n_bins: int = 3,
-            strategy: str = "quantile",
     ):
         super().__init__(
             md_source=md_source,
@@ -231,11 +215,9 @@ class TargetDiffBuilder(TargetBuilder):
         )
         self.classes = classes
         self.model_classes = model_classes
-        self.n_bins = n_bins
-        self.strategy = strategy
         self._col_name = ""
 
-    def __get_target__(self, metrics_dataset: pd.DataFrame) -> np.ndarray:
+    def __get_target__(self, metrics_dataset: pd.DataFrame) -> pd.DataFrame:
         mean_vals = metrics_dataset.mean()
         max_res = {c : ("", 0.) for c in self.classes}
         for i in mean_vals.index:
@@ -250,68 +232,7 @@ class TargetDiffBuilder(TargetBuilder):
 
         self._col_name = diff_df.columns[0]
 
-        return diff_df.to_numpy(copy=True)
-
-    def __get_col_names__(self, metrics_dataset: pd.DataFrame) -> list[str]:
-        return [self._col_name]
+        return diff_df
 
     def __get_suffix__(self) -> str:
         return self.class_name
-
-
-if __name__ == "__main__":
-    raw_builder = TargetRawBuilder(
-        md_source=TabzillaSource(),
-        features_folder="filtered",
-        metrics_folder="filtered",
-        metric_name="F1__test",
-        test_mode=False,
-    )
-
-    abs_perf_builder = TargetPerfBuilder(
-        md_source=TabzillaSource(),
-        features_folder="filtered",
-        metrics_folder="filtered",
-        metric_name="F1__test",
-        perf_type="abs",
-        n_bins=2,
-        strategy="quantile",
-        test_mode=False,
-    )
-
-    rel_perf_builder = TargetPerfBuilder(
-        md_source=TabzillaSource(),
-        features_folder="filtered",
-        metrics_folder="filtered",
-        metric_name="F1__test",
-        perf_type="rel",
-        n_bins=3,
-        strategy="uniform",
-        test_mode=False,
-    )
-
-    model_classes = {
-        "rtdl_FTTransformer": "nn",
-        "rtdl_MLP": "nn",
-        "rtdl_ResNet": "nn",
-        "LinearModel": "classic",
-        "RandomForest": "classic",
-        "XGBoost": "classic"
-    }
-
-    diff_builder = TargetDiffBuilder(
-        classes=["nn", "classic"],
-        model_classes=model_classes,
-        md_source=TabzillaSource(),
-        features_folder="filtered",
-        metrics_folder="filtered",
-        metric_name="F1__test",
-        n_bins=3,
-        strategy="uniform",
-        test_mode=False,
-    )
-
-    raw = raw_builder.handle_metrics()
-    abs = abs_perf_builder.handle_metrics()
-    rel = rel_perf = rel_perf_builder.handle_metrics()
-    diff = diff_builder.handle_metrics()

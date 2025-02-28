@@ -2,7 +2,7 @@ import pandas as pd
 from scipy.stats import pearsonr, spearmanr
 from sklearn.feature_selection import f_classif, mutual_info_classif, chi2
 
-from ms.handler.metadata_source import MetadataSource
+from ms.handler.data_source import DataSource
 from ms.handler.selector_handler import SelectorHandler
 from ms.utils.typing import NDArrayFloatT
 
@@ -18,7 +18,7 @@ class CorrelationSelector(SelectorHandler):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "preprocessed",
             metrics_folder: str | None = "preprocessed",
             corr_type: str = "spearman",
@@ -72,7 +72,7 @@ class Chi2Selector(SelectorHandler):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "preprocessed",
             metrics_folder: str | None = "preprocessed",
             p_threshold: float = 0.05,
@@ -114,7 +114,7 @@ class MutualInfoSelector(SelectorHandler):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "preprocessed",
             metrics_folder: str | None = "preprocessed",
             quantile_value: float = 0.9,
@@ -157,7 +157,7 @@ class FValueSelector(SelectorHandler):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "preprocessed",
             metrics_folder: str | None = "preprocessed",
             p_threshold: float = 0.05,

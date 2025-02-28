@@ -3,7 +3,7 @@ from ms.utils.navigation import get_project_path, pjoin
 
 
 @dataclass
-class MetadataConfig:
+class NavigationConfig:
     project_path: str = pjoin(get_project_path())
     resources: str = pjoin(project_path, "resources")
     results_path: str = pjoin(project_path, "results")
@@ -27,4 +27,3 @@ class MetadataConfig:
     results_prefix: str = "results"
     splits_prefix: str = "splits"
     slices_prefix: str = "slices"
-    addition_prefix: str = "addition"

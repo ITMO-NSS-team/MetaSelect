@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
 
-from ms.handler.metadata_source import MetadataSource
+from ms.handler.data_source import DataSource
 from ms.handler.selector_handler import SelectorHandler
 from ms.utils.typing import NDArrayFloatT
 
@@ -35,7 +35,7 @@ class XGBSelector(SelectorHandler, ModelBased):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "preprocessed",
             metrics_folder: str | None = "preprocessed",
             importance_threshold: float = 0.0,
@@ -87,7 +87,7 @@ class LassoSelector(SelectorHandler, ModelBased):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "preprocessed",
             metrics_folder: str | None = "preprocessed",
             coef_threshold: float = 0.0,

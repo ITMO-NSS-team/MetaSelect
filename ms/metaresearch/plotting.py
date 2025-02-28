@@ -4,13 +4,13 @@ import pandas as pd
 import seaborn as sns
 from matplotlib import pyplot as plt
 
-from ms.handler.metadata_handler import MetadataHandler
-from ms.handler.metadata_source import MetadataSource
+from ms.handler.data_handler import DataHandler
+from ms.handler.data_source import DataSource
 from ms.metaresearch.meta_model import MetaModel
 from ms.metaresearch.selector_data import SelectorData
 
 
-class Plotter(MetadataHandler):
+class Plotter(DataHandler):
     @property
     def class_name(self) -> str:
         return "plotter"
@@ -20,7 +20,7 @@ class Plotter(MetadataHandler):
         return self.config.plots
 
     @property
-    def source(self) -> MetadataSource:
+    def source(self) -> DataSource:
         return self._md_source
 
     @property
@@ -40,7 +40,7 @@ class Plotter(MetadataHandler):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             mean_cols: list[str],
             std_cols: list[str],
             features_folder: str = "preprocessed",
@@ -187,7 +187,7 @@ class Plotter(MetadataHandler):
                     if sel_res[sel][target_suffix].get(metamodel) is None:
                         continue
                     df = sel_res[sel][target_suffix][metamodel]
-                    df = df.loc[target_model]
+                    df = df.loc[target_model].to_frame().T
                     df["selector"] = [sel for _ in range(len(df.index))]
                     target_model_res.append(df)
                     # df = pd.DataFrame(target_model_res[sel]).T

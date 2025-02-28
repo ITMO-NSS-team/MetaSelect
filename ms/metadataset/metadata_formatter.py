@@ -3,8 +3,8 @@ from abc import ABC
 import pandas as pd
 
 from ms.handler.handler_info import HandlerInfo
-from ms.handler.metadata_handler import FeaturesHandler, MetricsHandler
-from ms.handler.metadata_source import TabzillaSource
+from ms.handler.data_handler import FeaturesHandler, MetricsHandler
+from ms.handler.data_source import TabzillaSource
 
 
 class MetadataFormatter(FeaturesHandler, MetricsHandler, ABC):
@@ -121,13 +121,3 @@ class TabzillaFormatter(MetadataFormatter):
         else:
             agg_metrics = agg_metrics.mean(numeric_only=True)
         return agg_metrics
-
-
-if __name__ == "__main__":
-    formatter = TabzillaFormatter(
-        features_folder="raw",
-        metrics_folder="raw",
-        test_mode=False,
-    )
-    formatter.handle_features(to_save=True)
-    formatter.handle_metrics(to_save=True)

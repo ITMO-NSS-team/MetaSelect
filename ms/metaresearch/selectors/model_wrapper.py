@@ -3,7 +3,7 @@ from abc import ABC
 import pandas as pd
 from sklearn.feature_selection import RFE
 
-from ms.handler.metadata_source import MetadataSource
+from ms.handler.data_source import DataSource
 from ms.handler.selector_handler import SelectorHandler
 from ms.metaresearch.meta_model import MetaModel
 from ms.metaresearch.selectors.model_based import ModelBased
@@ -34,7 +34,7 @@ class RFESelector(SelectorHandler, ModelBased, ModelWrapper):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             model: MetaModel,
             features_folder: str = "preprocessed",
             metrics_folder: str | None = "preprocessed",
