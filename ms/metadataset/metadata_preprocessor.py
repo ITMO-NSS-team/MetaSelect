@@ -5,8 +5,8 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler, PowerTransformer
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 
 from ms.handler.handler_info import HandlerInfo
-from ms.handler.metadata_handler import FeaturesHandler, MetricsHandler
-from ms.handler.metadata_source import MetadataSource, TabzillaSource
+from ms.handler.data_handler import FeaturesHandler, MetricsHandler
+from ms.handler.data_source import DataSource
 from ms.utils.metadata import remove_constant_features
 
 
@@ -32,7 +32,7 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
         return self.config.preprocessed_folder
 
     @property
-    def source(self) -> MetadataSource:
+    def source(self) -> DataSource:
         return self._md_source
 
     @property
@@ -48,7 +48,7 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "filtered",
             metrics_folder: str | None = "target",
             to_scale: list[str] | None = None,
@@ -122,7 +122,7 @@ class ScalePreprocessor(MetadataPreprocessor):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "filtered",
             metrics_folder: str | None = "target",
             to_scale: list[str] | None = None,
@@ -187,7 +187,7 @@ class CorrelationPreprocessor(MetadataPreprocessor):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "preprocessed",
             metrics_folder: str | None = "preprocessed",
             to_scale: list[str] | None = None,
@@ -247,23 +247,3 @@ class CorrelationPreprocessor(MetadataPreprocessor):
         vif_data["VIF"] = [variance_inflation_factor(dataset.values, i)
                            for i in range(len(dataset.columns))]
         return vif_data.sort_values(by="VIF", ascending=False)
-
-
-if __name__ == "__main__":
-    corr_filter = CorrelationPreprocessor(
-        md_source=TabzillaSource(),
-        features_folder="preprocessed",
-        metrics_folder="preprocessed",
-        corr_method="spearman",
-        corr_value_threshold=0.9,
-        vif_value_threshold=20000,
-        vif_count_threshold=None,
-        test_mode=False,
-    )
-
-    corr_features, corr_metrics = corr_filter.preprocess(
-        feature_suffix="power",
-        metrics_suffix="perf_abs"
-    )
-    print(corr_features.shape)
-    print(corr_metrics.shape)

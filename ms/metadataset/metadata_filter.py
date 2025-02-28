@@ -5,8 +5,8 @@ import numpy as np
 import pandas as pd
 
 from ms.handler.handler_info import HandlerInfo
-from ms.handler.metadata_handler import FeaturesHandler, MetricsHandler
-from ms.handler.metadata_source import TabzillaSource
+from ms.handler.data_handler import FeaturesHandler, MetricsHandler
+from ms.handler.data_source import TabzillaSource
 from ms.utils.metadata import remove_constant_features
 
 
@@ -195,27 +195,3 @@ class TabzillaFilter(MetadataFilter):
             for index, row in metrics_dataset.iterrows():
                 if dataset_models[row["dataset_name"]] != set(self.models_list):
                     metrics_dataset.drop(index, axis="index", inplace=True)
-
-
-if __name__ == "__main__":
-    md_filter = TabzillaFilter(
-        features_folder="formatted",
-        metrics_folder="formatted",
-        funcs_to_exclude=[
-            "count",
-            "histogram",
-            "iq_range",
-            "median",
-            "quantiles",
-            "range",
-        ],
-        models_list=["XGBoost", "RandomForest", "LinearModel",
-                     "rtdl_ResNet", "rtdl_FTTransformer", "rtdl_MLP"],
-        test_mode=False,
-        value_threshold=1e6,
-    )
-
-    f = md_filter.handle_features(to_save=True)
-    print(f.shape)
-    m = md_filter.handle_metrics(to_save=True)
-    print(m.shape)

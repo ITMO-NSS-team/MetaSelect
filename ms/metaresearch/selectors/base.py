@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from ms.handler.metadata_source import MetadataSource
+from ms.handler.data_source import DataSource
 from ms.handler.selector_handler import SelectorHandler
 from ms.utils.typing import NDArrayFloatT
 
@@ -17,7 +17,7 @@ class BaseSelector(SelectorHandler):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "preprocessed",
             metrics_folder: str | None = "preprocessed",
             test_mode: bool = False,

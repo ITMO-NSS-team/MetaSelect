@@ -2,12 +2,12 @@ from random import sample
 
 import numpy as np
 
-from ms.handler.metadata_handler import MetadataHandler
-from ms.handler.metadata_source import MetadataSource
+from ms.handler.data_handler import DataHandler
+from ms.handler.data_source import DataSource
 from ms.utils.typing import NDArrayFloatT
 
 
-class FeatureCrafter(MetadataHandler):
+class FeatureCrafter(DataHandler):
     distribution = {
         "normal": np.random.normal,
         "uniform": np.random.uniform,
@@ -16,7 +16,7 @@ class FeatureCrafter(MetadataHandler):
     }
 
     @property
-    def source(self) -> MetadataSource:
+    def source(self) -> DataSource:
         return self._md_source
 
     @property
@@ -44,7 +44,7 @@ class FeatureCrafter(MetadataHandler):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "filtered",
             metrics_folder: str | None = "target",
             test_mode: bool = False,

@@ -9,7 +9,7 @@ from econml.dml import CausalForestDML
 from sklearn.ensemble import RandomForestRegressor
 from torch.utils.data import TensorDataset, DataLoader
 
-from ms.handler.metadata_source import MetadataSource
+from ms.handler.data_source import DataSource
 from ms.handler.selector_handler import SelectorHandler
 from ms.utils.typing import NDArrayFloatT
 
@@ -25,7 +25,7 @@ class TESelector(SelectorHandler):
 
     def __init__(
             self,
-            md_source: MetadataSource,
+            md_source: DataSource,
             features_folder: str = "preprocessed",
             metrics_folder: str | None = "preprocessed",
             quantile_value: float = 0.8,
@@ -84,7 +84,7 @@ class CFSelector(SelectorHandler):
     
     def __init__(
         self,
-        md_source: MetadataSource,
+        md_source: DataSource,
         features_folder: str = "preprocessed",
         metrics_folder: str | None = "preprocessed",
         test_mode: bool = False,

@@ -1,16 +1,15 @@
 import random
 
-from ms.metadataset.metadata_sampler import MetadataSampler
-from ms.metaresearch.meta_learning import MetaLearner
-from ms.pipeline.pipeline_constants import *
 import numpy as np
+
+from ms.metadataset.metadata_sampler import DataSampler
+from ms.pipeline.pipeline_constants import *
 
 np.random.seed(seed)
 random.seed(seed)
 
-f_sampler = MetadataSampler(
+f_sampler = DataSampler(
         md_source=md_source,
-        splitter=train_test_slitter,
         features_folder="preprocessed",
         metrics_folder="preprocessed",
         test_mode=False
@@ -32,12 +31,21 @@ meta_learner = MetaLearner(
 selectors_to_use = ["base", "corr", "f_val", "mi", "xgb", "lasso", "rfe", "te", "cf"]
 selectors = [all_handlers[selector][1] for selector in selectors_to_use if selector != "rfe"]
 metrics_suffixes = ["perf_abs", "perf_rel", "diff"]
+features_suffixes = ["power"]
 
 if __name__ == "__main__":
-    f_sampler.sample_data(
-        feature_suffixes=["power"],
+    f_sampler.split_data(
+        feature_suffixes=features_suffixes,
         target_suffix="perf_abs",
-        rewrite=False
+        splitter=k_fold_splitter,
+        rewrite=False,
+    )
+
+    f_sampler.slice_features(
+        feature_suffixes=["power"],
+        rewrite=False,
+        n_iter=1,
+        slice_sizes=None, # all dataset
     )
 
     for features_suffix in features_suffixes:

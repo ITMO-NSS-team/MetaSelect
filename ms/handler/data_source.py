@@ -3,20 +3,20 @@ from dataclasses import dataclass
 
 
 @dataclass
-class MetadataSource(ABC):
+class DataSource(ABC):
     @property
     @abstractmethod
     def name(self) -> str:
         pass
 
 @dataclass
-class TabzillaSource(MetadataSource):
+class TabzillaSource(DataSource):
     name: str = "tabzilla"
 
 class SourceBased(ABC):
     @property
     @abstractmethod
-    def source(self) -> MetadataSource:
+    def source(self) -> DataSource:
         pass
 
     @property
