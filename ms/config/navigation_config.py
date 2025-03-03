@@ -15,6 +15,11 @@ class NavigationConfig:
     preprocessed_folder: str = "preprocessed"
     target_folder: str = "target"
     sampler_folder: str = "sampler"
+    handler_info_suffix: str = "info"
+
+    range_name: str = "range"
+    dataset_name: str = "dataset_name"
+    alg_name: str = "alg_name"
 
     meta_learning: str = "meta_learning"
     plots: str = "plots"
