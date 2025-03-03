@@ -28,7 +28,7 @@ class DataSampler(DataHandler):
         }
 
     @property
-    def save_path(self) -> str:
+    def save_root(self) -> str:
         return self.config.resources
 
     def __init__(

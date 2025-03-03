@@ -21,7 +21,7 @@ class SelectorHandler(DataHandler, ABC):
         }
 
     @property
-    def save_path(self) -> str:
+    def save_root(self) -> str:
         return self.config.results_path
 
     def __init__(
