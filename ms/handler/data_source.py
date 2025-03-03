@@ -18,17 +18,3 @@ class SourceBased(ABC):
     @abstractmethod
     def source(self) -> DataSource:
         pass
-
-    @property
-    @abstractmethod
-    def class_name(self) -> str:
-        pass
-
-    @property
-    @abstractmethod
-    def class_folder(self) -> str:
-        pass
-
-    @property
-    def name(self) -> str:
-        return f"{self.source.name}_{self.class_name}"
