@@ -16,19 +16,20 @@ class TargetBuilder(MetricsHandler, ABC):
         return self._md_source
 
     @property
-    def has_index(self) -> dict:
-        return {
-            "features": True,
-            "metrics": True,
-        }
+    def load_root(self) -> str:
+        return self.config.resources
 
     @property
-    def save_path(self) -> str:
+    def save_root(self) -> str:
         return self.config.resources
 
     @property
     def class_folder(self) -> str:
         return self.config.target_folder
+
+    @property
+    def class_name(self) -> str:
+        return "target"
 
     def __init__(
             self,
@@ -80,7 +81,7 @@ class TargetBuilder(MetricsHandler, ABC):
 
 class TargetRawBuilder(TargetBuilder):
     @property
-    def class_name(self) -> str:
+    def class_suffix(self) -> str | None:
         return "raw"
 
     def __init__(
@@ -107,13 +108,13 @@ class TargetRawBuilder(TargetBuilder):
         return metrics_dataset
 
     def __get_suffix__(self) -> str:
-        return self.class_name
+        return self.class_suffix
 
 
 class TargetPerfBuilder(TargetBuilder):
     @property
-    def class_name(self) -> str:
-        return "perf"
+    def class_suffix(self) -> str | None:
+        return f"perf_{self.perf_type}"
 
     def __init__(
             self,
@@ -159,7 +160,7 @@ class TargetPerfBuilder(TargetBuilder):
         )
 
     def __get_suffix__(self) -> str:
-        return f"{self.class_name}_{self.perf_type}"
+        return f"{self.class_suffix}_{self.perf_type}"
 
     def __get_abs_perf__(self, nd_array: NDArrayFloatT) -> NDArrayFloatT:
         new_array = np.zeros_like(nd_array)
@@ -189,7 +190,7 @@ class TargetPerfBuilder(TargetBuilder):
 
 class TargetDiffBuilder(TargetBuilder):
     @property
-    def class_name(self) -> str:
+    def class_suffix(self) -> str | None:
         return "diff"
 
     def __init__(
@@ -235,4 +236,4 @@ class TargetDiffBuilder(TargetBuilder):
         return diff_df
 
     def __get_suffix__(self) -> str:
-        return self.class_name
+        return self.class_suffix
