@@ -1,4 +1,4 @@
-from ms.metaresearch.plotting import Plotter
+from ms.metaresearch.plotter import Plotter
 from ms.pipeline.init_features_experiment import metrics_suffixes, selectors_to_use
 from ms.pipeline.pipeline_constants import *
 

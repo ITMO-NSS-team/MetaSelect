@@ -2,8 +2,8 @@ import random
 
 import numpy as np
 
-from ms.metadataset.feature_engineering import FeatureCrafter
-from ms.metadataset.metadata_sampler import DataSampler
+from ms.metadataset.feature_sampler import FeatureCrafter
+from ms.metadataset.data_splitter import DataSampler
 from ms.pipeline.pipeline_constants import *
 
 np.random.seed(seed)

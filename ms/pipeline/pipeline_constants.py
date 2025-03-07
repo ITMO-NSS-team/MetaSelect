@@ -6,7 +6,7 @@ from sklearn.neural_network import MLPClassifier
 from xgboost import XGBClassifier
 
 from ms.handler.data_source import TabzillaSource
-from ms.metaresearch.meta_learning import MetaLearner
+from ms.metaresearch.meta_learner import MetaLearner
 from ms.metaresearch.meta_model import MetaModel
 from ms.metaresearch.selectors.base import BaseSelector
 from ms.metaresearch.selectors.causal import TESelector, CFSelector

@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 
-from ms.metadataset.metadata_sampler import DataSampler
+from ms.metadataset.data_splitter import DataSampler
 from ms.pipeline.pipeline_constants import *
 
 np.random.seed(seed)
