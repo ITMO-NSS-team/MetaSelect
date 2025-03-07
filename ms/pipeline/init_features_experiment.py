@@ -2,7 +2,7 @@ import random
 
 import numpy as np
 
-from ms.metadataset.metadata_sampler import DataSampler
+from ms.metadataset.data_splitter import DataSampler
 from ms.pipeline.pipeline_constants import *
 
 np.random.seed(seed)
@@ -38,12 +38,12 @@ if __name__ == "__main__":
         feature_suffixes=features_suffixes,
         target_suffix="perf_abs",
         splitter=k_fold_splitter,
-        rewrite=False,
+        to_rewrite=False,
     )
 
     f_sampler.slice_features(
         feature_suffixes=["power"],
-        rewrite=False,
+        to_rewrite=False,
         n_iter=1,
         slice_sizes=None, # all dataset
     )
@@ -53,11 +53,11 @@ if __name__ == "__main__":
         for metrics_suffix in metrics_suffixes:
             print(metrics_suffix)
             for selector in selectors:
-                print(selector.name)
+                print(selector.class_name)
                 selector.perform(
                     features_suffix=features_suffix,
                     metrics_suffix=metrics_suffix,
-                    rewrite=False,
+                    to_rewrite=False,
                 )
 
     meta_learner.run_models(
@@ -65,6 +65,5 @@ if __name__ == "__main__":
         feature_suffixes=features_suffixes,
         target_suffixes=metrics_suffixes,
         selector_names=selectors_to_use,
-        rewrite=False,
-        to_save=True,
+        to_rewrite=False,
     )

@@ -1,3 +1,4 @@
+from pathlib import Path
 from random import sample
 
 import pandas as pd
@@ -5,9 +6,14 @@ from sklearn.model_selection import KFold, ShuffleSplit
 
 from ms.handler.data_handler import DataHandler
 from ms.handler.data_source import DataSource
+from ms.utils.navigation import rewrite_decorator
 
 
 class DataSampler(DataHandler):
+    @property
+    def class_suffix(self) -> str | None:
+        return None
+
     @property
     def class_name(self) -> str:
         return "features_sampler"
@@ -21,20 +27,16 @@ class DataSampler(DataHandler):
         return self._md_source
 
     @property
-    def has_index(self) -> dict:
-        return {
-            "features": True,
-            "metrics": True,
-        }
+    def load_root(self) -> str:
+        return self.config.resources
 
     @property
-    def save_path(self) -> str:
+    def save_root(self) -> str:
         return self.config.resources
 
     def __init__(
             self,
             md_source: DataSource,
-            # splitter: KFold | ShuffleSplit,
             features_folder: str = "preprocessed",
             metrics_folder: str | None = "preprocessed",
             test_mode: bool = False,
@@ -45,94 +47,111 @@ class DataSampler(DataHandler):
             test_mode=test_mode,
         )
         self._md_source = md_source
-        # self.splitter = splitter
 
     def split_data(
             self,
             feature_suffixes: list[str],
             target_suffix: str,
             splitter: KFold | ShuffleSplit,
-            rewrite: bool = False,
+            to_rewrite: bool = False,
     ) -> None:
         y_df = self.load_metrics(suffix=target_suffix)
         for feature_suffix in feature_suffixes:
-            splits_dict = {}
-            splits_path = self.get_path(
-                folder_name=self.config.sampler_folder,
-                file_name=f"{self.config.splits_prefix}.json",
-                inner_folders=[feature_suffix],
+            save_path = self.get_samples_path(
+                root_type="save",
+                folders=[feature_suffix],
+                sample_type=self.config.splits_prefix,
             )
-            if not rewrite and splits_path.exists():
-                continue
-
             x_df = self.load_features(suffix=feature_suffix)
-
-            data_split = splitter.split(x_df, y_df)
-
-            for i, (train, test) in enumerate(data_split):
-                splits_dict[i] = {
-                    "train": list(map(int, train)),
-                    "test": list(map(int, test)),
-                }
-
-            self.save_samples(
-                data=splits_dict,
-                file_name=f"{self.config.splits_prefix}",
-                inner_folders=[feature_suffix],
+            self._split_data(
+                save_path=save_path,
+                x_df=x_df,
+                y_df=y_df,
+                splitter=splitter,
+                to_rewrite=to_rewrite,
             )
+
 
     def slice_features(
             self,
             feature_suffixes: list[str],
-            rewrite: bool = False,
+            to_rewrite: bool = False,
             n_iter: int = 1,
             slice_sizes: list[int] | None = None,
     ) -> None:
         for feature_suffix in feature_suffixes:
+            save_path = self.get_samples_path(
+                root_type="save",
+                folders=[feature_suffix],
+                sample_type=self.config.slices_prefix,
+            )
             x_df = self.load_features(suffix=feature_suffix)
-            self.make_slices(
-                suffix=feature_suffix,
+            self._slice_features(
+                save_path=save_path,
                 x_df=x_df,
-                rewrite=rewrite,
                 slice_sizes=slice_sizes,
                 n_iter=n_iter,
+                to_rewrite=to_rewrite,
             )
 
-    def slice_additional_features(
+    def sample_uninformative(
             self,
             feature_suffixes: list[str],
-            rewrite: bool = False,
+            to_rewrite: bool = False,
             n_iter: int = 1,
             percents: list[float] | None = None,
     ) -> None:
         for feature_suffix in feature_suffixes:
+            save_path = self.get_samples_path(
+                root_type="save",
+                folders=[feature_suffix],
+                sample_type=self.config.slices_prefix,
+            )
             x_df = self.load_features(suffix=feature_suffix)
-            self.sample_uninformative(
+            self._sample_uninformative(
+                save_path=save_path,
                 suffix=feature_suffix,
                 percents=percents,
-                rewrite=rewrite,
+                to_rewrite=to_rewrite,
                 x_df=x_df,
                 n_iter=n_iter,
             )
 
-
-    def make_slices(
+    @rewrite_decorator
+    def _split_data(
             self,
-            suffix: str,
+            save_path: str,
             x_df: pd.DataFrame,
-            rewrite: bool = False,
+            y_df: pd.DataFrame,
+            splitter: KFold | ShuffleSplit,
+    ) -> None:
+        splits_dict = {}
+
+        data_split = splitter.split(x_df, y_df)
+
+        for i, (train, test) in enumerate(data_split):
+            splits_dict[i] = {
+                "train": list(map(int, train)),
+                "test": list(map(int, test)),
+            }
+
+        self.save_samples(
+            samples=splits_dict,
+            sample_type=self.config.splits_prefix,
+            path=save_path,
+        )
+
+    @rewrite_decorator
+    def _slice_features(
+            self,
+            save_path: Path,
+            x_df: pd.DataFrame,
             slice_sizes: list[int] | None = None,
             n_iter: int = 5,
     ) -> None:
         if slice_sizes is None:
             slice_sizes = [x_df.shape[1]]
-        save_path = self.get_path(
-            folder_name=self.config.sampler_folder,
-            file_name=f"{self.config.slices_prefix}.json",
-            inner_folders=[suffix],
-        )
-        if not rewrite and save_path.exists():
-            return
+
         samples_dict = {}
 
         f_num = x_df.shape[1]
@@ -145,28 +164,23 @@ class DataSampler(DataHandler):
                 samples_dict[size][i] = slice_sizes
 
         self.save_samples(
-            data=samples_dict,
-            file_name=f"{self.config.slices_prefix}",
-            inner_folders=[suffix]
+            samples=samples_dict,
+            sample_type=self.config.slices_prefix,
+            path=save_path,
         )
 
-    def sample_uninformative(
+    @rewrite_decorator
+    def _sample_uninformative(
             self,
+            save_path: Path,
             suffix: str,
             x_df: pd.DataFrame,
-            rewrite: bool = False,
             percents: list[float] | None = None,
             n_iter: int = 1,
     ) -> None:
         if percents is None:
             percents = [0.1, 0.5, 1.0]
-        save_path = self.get_path(
-            folder_name=self.config.sampler_folder,
-            file_name=f"{self.config.slices_prefix}.json",
-            inner_folders=[suffix],
-        )
-        if not rewrite and save_path.exists():
-            return
+
         samples_dict = {}
         additional_indices = []
         original_indices = []
@@ -183,7 +197,7 @@ class DataSampler(DataHandler):
                 samples_dict[i][j] = sample(additional_indices, sample_size) + original_indices
 
         self.save_samples(
-            data=samples_dict,
-            file_name=f"{self.config.slices_prefix}",
-            inner_folders=[suffix]
+            samples=samples_dict,
+            sample_type=self.config.slices_prefix,
+            path=save_path,
         )

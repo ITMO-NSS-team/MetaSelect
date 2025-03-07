@@ -1,5 +1,3 @@
-import json
-import os.path
 from pathlib import Path
 from typing import Callable
 
@@ -10,10 +8,14 @@ from ms.handler.data_source import DataSource
 from ms.metaresearch.meta_model import MetaModel
 from ms.metaresearch.selector_data import SelectorData
 from ms.metaresearch.selectors.model_wrapper import RFESelector
-from ms.utils.navigation import pjoin
+from ms.utils.navigation import pjoin, load, save, rewrite_decorator
 
 
 class MetaLearner(DataHandler):
+    @property
+    def class_suffix(self) -> str | None:
+        return None
+
     @property
     def class_name(self) -> str:
         return "meta_learner"
@@ -34,7 +36,11 @@ class MetaLearner(DataHandler):
         }
 
     @property
-    def save_path(self) -> str:
+    def load_root(self) -> str:
+        return self.config.resources
+
+    @property
+    def save_root(self) -> str:
         return self.config.results_path
 
     def __init__(
@@ -69,8 +75,7 @@ class MetaLearner(DataHandler):
             feature_suffixes: list[str],
             target_suffixes: list[str],
             selector_names: list[str],
-            rewrite: bool = True,
-            to_save: bool = True,
+            to_rewrite: bool = True,
     ) -> None:
         selectors = self.load_selectors(
             features_suffixes=feature_suffixes,
@@ -81,8 +86,8 @@ class MetaLearner(DataHandler):
             print(f"Feature suffix: {feature_suffix}")
             x_df = self.load_features(suffix=feature_suffix)
             splits = self.load_samples(
-                file_name=f"{self.config.splits_prefix}",
-                inner_folders=[feature_suffix]
+                sample_type=self.config.splits_prefix,
+                folders=[feature_suffix]
             )
             for s_name in selector_names:
                 for target_suffix in target_suffixes:
@@ -94,77 +99,90 @@ class MetaLearner(DataHandler):
                     y_df = self.load_metrics(suffix=target_suffix)
                     for model in models:
                         print(f"Metamodel: {model.name}")
-                        if selector.name == "rfe":
+                        if selector.features is None:
                             if model.name == "knn":
                                 continue
                             rfe_handler = RFESelector(md_source=self.source, model=model)
                             selector = rfe_handler.perform(
                                 features_suffix=feature_suffix,
                                 metrics_suffix=target_suffix,
-                                rewrite=rewrite,
+                                to_rewrite=to_rewrite,
                             )
                         for sample in selector.features:
                             print(f"Sample size: {sample}")
-
                             save_path = self.get_path(
-                                folder_name=feature_suffix,
+                                root_type="save",
                                 inner_folders=[
+                                    feature_suffix,
                                     selector.name,
                                     target_suffix,
                                     model.name,
                                 ],
-                                file_name=self.get_file_name(
+                                prefix=self.get_file_name(
                                     prefix=self.config.results_prefix,
                                     suffix=sample,
                                 ),
+                                file_type="csv",
                             )
-                            if os.path.isfile(save_path) and not rewrite:
-                                continue
-
-                            sample_res = []
-                            sample_params = {}
-                            for n_iter in selector.features[sample]:
-                                print(f"Iter: {n_iter}")
-                                model_scores = model.run(
-                                    x=x_df,
-                                    y=y_df,
-                                    splits=splits,
-                                    slices=selector.features[sample][n_iter],
-                                    opt_scoring=self.opt_scoring,
-                                    model_scoring=self.model_scoring,
-                                    opt_method=self.opt_method,
-                                    opt_cv=self.opt_cv,
-                                    n_trials=self.n_trials,
-                                )
-
-                                formatted_scores, formatted_params = self.format_scores(
-                                    model_scores=model_scores,
-                                    n_samples=sample
-                                )
-                                # print(formatted_scores)
-                                sample_res.append(formatted_scores)
-                                sample_params[n_iter] = formatted_params
-                            sample_res = pd.concat(sample_res)
-                            if not to_save:
-                                continue
-                            self.save(
-                                data_frame=sample_res,
-                                folder_name=feature_suffix,
-                                inner_folders=[
-                                    selector.name,
-                                    target_suffix,
-                                    model.name,
-                                ],
-                                file_name=self.get_file_name(
-                                    prefix=self.config.results_prefix,
-                                    suffix=sample,
-                                ),
-                            )
-                            self.save_params(
-                                params=sample_params,
+                            self.run_samples(
                                 save_path=save_path,
-                                model_name=model.name
+                                x_df=x_df,
+                                y_df=y_df,
+                                selector=selector,
+                                sample=sample,
+                                splits=splits,
+                                model=model,
+                                to_rewrite=to_rewrite,
                             )
+
+    @rewrite_decorator
+    def run_samples(
+            self,
+            save_path: Path,
+            x_df: pd.DataFrame,
+            y_df: pd.DataFrame,
+            selector: SelectorData,
+            sample: dict,
+            splits: dict,
+            model: MetaModel,
+    ):
+        sample_res = []
+        sample_params = {}
+        for n_iter in selector.features[sample]:
+            print(f"Iter: {n_iter}")
+            model_scores = model.run(
+                x=x_df,
+                y=y_df,
+                splits=splits,
+                slices=selector.features[sample][n_iter],
+                opt_scoring=self.opt_scoring,
+                model_scoring=self.model_scoring,
+                opt_method=self.opt_method,
+                opt_cv=self.opt_cv,
+                n_trials=self.n_trials,
+            )
+
+            formatted_scores, formatted_params = self.format_scores(
+                model_scores=model_scores,
+                n_samples=sample
+            )
+            sample_res.append(formatted_scores)
+            sample_params[n_iter] = formatted_params
+        sample_res = pd.concat(sample_res)
+
+        save(
+            data=sample_res,
+            path=save_path,
+            file_type="csv",
+        )
+        save(
+            data=sample_params,
+            path=Path(pjoin(
+                save_path.parent,
+                f"{model.name}.json"
+            )),
+            file_type="json",
+        )
 
 
     def format_scores(
@@ -198,12 +216,6 @@ class MetaLearner(DataHandler):
 
         return res_df, best_params
 
-
-    @staticmethod
-    def save_params(params: dict, save_path: Path, model_name: str) -> None:
-        with open(pjoin(save_path.parent, f"{model_name}.json"), "w") as f:
-            json.dump(params, f)
-
     @staticmethod
     def sjoin(x: pd.DataFrame) -> str:
         return ';'.join(x[x.notnull()].astype(str))
@@ -213,7 +225,6 @@ class MetaLearner(DataHandler):
             features_suffixes: list[str],
             metrics_suffixes: list[str],
             selector_names: list[str],
-            all_data: bool = False,
     ) -> list[SelectorData]:
         selectors = {}
         for features_suffix in features_suffixes:
@@ -223,16 +234,18 @@ class MetaLearner(DataHandler):
                         selectors[s_name] = {}
                     if selectors[s_name].get(features_suffix) is None:
                         selectors[s_name][features_suffix] = {}
-                    if s_name != "rfe" or (s_name == "rfe" and all_data):
-                        results = self.load_json(
-                            folder_name=features_suffix,
-                            file_name=f"{metrics_suffix}.json",
-                            inner_folders=[
-                                s_name,
-                                "selection_data"
-                            ],
-                            to_save=True,
-                        )
+                    json_path = self.get_path(
+                        root_type="save",
+                        inner_folders=[
+                            features_suffix,
+                            s_name,
+                            self.config.selection_data
+                        ],
+                        prefix=metrics_suffix,
+                        file_type="json"
+                    )
+                    if json_path.exists():
+                        results = load(path=json_path, file_type="json")
                         selectors[s_name][features_suffix][metrics_suffix] = (
                             SelectorData(
                                 name=s_name,

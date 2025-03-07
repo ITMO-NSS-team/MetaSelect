@@ -16,19 +16,20 @@ class MetadataFilter(FeaturesHandler, MetricsHandler, ABC):
         return "filter"
 
     @property
-    def has_index(self) -> dict:
-        return {
-            "features": True,
-            "metrics": False,
-        }
+    def load_root(self) -> str:
+        return self.config.resources
 
     @property
-    def save_path(self) -> str:
+    def save_root(self) -> str:
         return self.config.resources
 
     @property
     def class_folder(self) -> str:
         return self.config.filtered_folder
+
+    @property
+    def class_suffix(self) -> str | None:
+        return None
 
     def __init__(
             self,
@@ -91,6 +92,7 @@ class TabzillaFilter(MetadataFilter):
 
     def __handle_metrics__(self, metrics_dataset: pd.DataFrame) -> tuple[pd.DataFrame, HandlerInfo]:
         filtered_metrics = metrics_dataset.copy()
+        filtered_metrics.set_index(self.config.range_name, drop=True, inplace=True)
 
         self.__remove_datasets_by_name__(dataset=filtered_metrics)
         self.__filter_models__(metrics_dataset=filtered_metrics)

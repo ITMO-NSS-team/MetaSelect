@@ -2,8 +2,8 @@ import random
 
 import numpy as np
 
-from ms.metadataset.feature_engineering import FeatureCrafter
-from ms.metadataset.metadata_sampler import DataSampler
+from ms.metadataset.feature_sampler import FeatureCrafter
+from ms.metadataset.data_splitter import DataSampler
 from ms.pipeline.pipeline_constants import *
 
 np.random.seed(seed)
@@ -43,11 +43,17 @@ if __name__ == "__main__":
                 features_suffix=data_transform,
                 second_order_percent=1.0, # 100% of data
         )
-        sampler.slice_additional_features(
+        sampler.sample_uninformative(
                 feature_suffixes=features_suffixes,
-                rewrite=True,
+                to_rewrite=True,
                 n_iter=1,
                 percents=[0.1, 0.3, 0.5, 0.7, 1.0] # data + % of data
+        )
+        sampler.split_data(
+                feature_suffixes=features_suffixes,
+                target_suffix="perf_abs",
+                splitter=k_fold_splitter,
+                to_rewrite=True,
         )
 
         for features_suffix in features_suffixes:
@@ -55,11 +61,11 @@ if __name__ == "__main__":
                 for metrics_suffix in metrics_suffixes:
                         print(metrics_suffix)
                         for selector in selectors:
-                                print(selector.name)
+                                print(selector.class_name)
                                 selector.perform(
                                         features_suffix=features_suffix,
                                         metrics_suffix=metrics_suffix,
-                                        rewrite=True,
+                                        to_rewrite=True,
                                 )
 
         meta_learner.run_models(
@@ -67,6 +73,5 @@ if __name__ == "__main__":
                 feature_suffixes=features_suffixes,
                 target_suffixes=metrics_suffixes,
                 selector_names=selectors_to_use,
-                rewrite=False,
-                to_save=True,
+                to_rewrite=False,
         )

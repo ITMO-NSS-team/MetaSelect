@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
+from pathlib import Path
 
 import pandas as pd
 
 from ms.handler.data_handler import DataHandler
 from ms.handler.data_source import DataSource
 from ms.metaresearch.selector_data import SelectorData
+from ms.utils.navigation import rewrite_decorator, save, load
 from ms.utils.typing import NDArrayFloatT
 
 
@@ -14,14 +16,15 @@ class SelectorHandler(DataHandler, ABC):
         return self._md_source
 
     @property
-    def has_index(self) -> dict[str, bool]:
-        return {
-            "features": True,
-            "metrics": True
-        }
+    def class_suffix(self) -> str | None:
+        return None
 
     @property
-    def save_path(self) -> str:
+    def load_root(self) -> str:
+        return self.config.resources
+
+    @property
+    def save_root(self) -> str:
         return self.config.results_path
 
     def __init__(
@@ -53,50 +56,89 @@ class SelectorHandler(DataHandler, ABC):
             self,
             features_suffix: str,
             metrics_suffix: str,
-            rewrite: bool = False,
+            to_rewrite: bool = False,
     ) -> SelectorData:
         slices = self.load_samples(
-            file_name=f"{self.config.slices_prefix}",
-            inner_folders=[features_suffix]
+            sample_type=self.config.slices_prefix,
+            folders=[features_suffix],
         )
         splits = self.load_samples(
-            file_name=f"{self.config.splits_prefix}",
-            inner_folders=[features_suffix]
+            sample_type=self.config.splits_prefix,
+            folders=[features_suffix]
         )
 
         features = self.load_features(suffix=features_suffix)
         metrics = self.load_metrics(suffix=metrics_suffix)
         target_models = [col for col in metrics.columns]
-        results = {}
-        errors = {}
 
         json_path = self.get_path(
-            folder_name=features_suffix,
-            file_name=f"{metrics_suffix}.json",
-            inner_folders=[self.class_folder, "selection_data"]
+            root_type="save",
+            inner_folders=[features_suffix, self.class_folder, "selection_data"],
+            prefix=metrics_suffix,
+            file_type="json",
         )
-        if not rewrite and json_path.exists():
-            return SelectorData(
-                name = self.class_folder,
-                features_suffix=features_suffix,
-                metrics_suffix=metrics_suffix,
-                features=self.load_json(
-                    folder_name="",
-                    file_name="",
-                    path=json_path
-                )
-            )
+        errors_path = self.get_path(
+            root_type="save",
+            inner_folders=[features_suffix, self.class_folder, "selection_data"],
+            prefix=f"{metrics_suffix}_errors",
+            file_type="json",
+        )
 
+        self.run_selectors(
+            save_path=json_path,
+            errors_path=errors_path,
+            slices=slices,
+            splits=splits,
+            features=features,
+            metrics=metrics,
+            features_suffix=features_suffix,
+            metrics_suffix=metrics_suffix,
+            target_models=target_models,
+            to_rewrite=to_rewrite,
+        )
+
+        return SelectorData(
+            name=self.class_folder,
+            features_suffix=features_suffix,
+            metrics_suffix=metrics_suffix,
+            features=load(path=json_path, file_type="json")
+        )
+
+
+    @rewrite_decorator
+    def run_selectors(
+            self,
+            save_path: Path,
+            errors_path: str,
+            slices: dict,
+            splits: dict,
+            features: pd.DataFrame,
+            metrics: pd.DataFrame,
+            features_suffix: str,
+            metrics_suffix: str,
+            target_models: list[str],
+            to_rewrite: bool = False,
+    ) -> None:
+        results = {}
+        errors = {}
         for f_slice in slices:
             print(f"Slice: {f_slice}")
             results[f_slice] = {}
             res_list = []
-            res_path = self.get_path(
-                folder_name=features_suffix,
-                file_name=f"{f_slice}.csv",
-                inner_folders=[self.class_folder, "selection_data", metrics_suffix]
+            res_path = (
+                self.get_path(
+                    root_type="save",
+                    inner_folders=[
+                        features_suffix,
+                        self.class_folder,
+                        "selection_data",
+                        metrics_suffix
+                    ],
+                    prefix=f_slice,
+                    file_type="json",
+                )
             )
-            if not rewrite and res_path.exists():
+            if not to_rewrite and res_path.exists():
                 df = pd.read_csv(res_path, index_col=0)
                 for n_iter in slices[f_slice]:
                     results[f_slice][n_iter] = {}
@@ -129,29 +171,20 @@ class SelectorHandler(DataHandler, ABC):
                     df.columns = [f"{col}_{n_iter}" for col in df.columns]
                     res_list.append(df)
             res_df = pd.concat(res_list, axis=1)
-            self.save(
-                data_frame=res_df,
-                folder_name="",
-                file_name="",
+            save(
+                data=res_df,
                 path=res_path,
+                file_type="csv",
             )
-        self.save_json(
+        save(
             data=results,
-            folder_name=features_suffix,
-            file_name=f"{metrics_suffix}.json",
-            inner_folders=[self.class_folder, "selection_data"]
+            path=save_path,
+            file_type="json",
         )
-        self.save_json(
+        save(
             data=errors,
-            folder_name=features_suffix,
-            file_name=f"{metrics_suffix}_errors.json",
-            inner_folders=[self.class_folder, "selection_data"]
-        )
-        return SelectorData(
-            name = self.class_folder,
-            features_suffix=features_suffix,
-            metrics_suffix=metrics_suffix,
-            features=results
+            path=errors_path,
+            file_type="json",
         )
 
     def __perform__(

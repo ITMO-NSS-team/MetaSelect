@@ -17,7 +17,15 @@ class MetadataFormatter(FeaturesHandler, MetricsHandler, ABC):
         return self.config.formatted_folder
 
     @property
-    def save_path(self) -> str:
+    def class_suffix(self) -> str | None:
+        return None
+
+    @property
+    def load_root(self) -> str:
+        return self.config.resources
+
+    @property
+    def save_root(self) -> str:
         return self.config.resources
 
     def __init__(
@@ -120,4 +128,6 @@ class TabzillaFormatter(MetadataFormatter):
             agg_metrics = agg_metrics.median(numeric_only=True)
         else:
             agg_metrics = agg_metrics.mean(numeric_only=True)
+        agg_metrics.reset_index(drop=False, inplace=True)
+        agg_metrics.index.name = self.config.range_name
         return agg_metrics

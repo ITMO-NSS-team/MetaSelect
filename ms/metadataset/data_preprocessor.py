@@ -11,18 +11,6 @@ from ms.utils.metadata import remove_constant_features
 
 
 class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
-    scalers = {
-        "standard": StandardScaler,
-        "minmax": MinMaxScaler,
-        "power": PowerTransformer,
-        "quantile": QuantileTransformer
-    }
-
-    @property
-    @abstractmethod
-    def has_suffix(self) -> bool:
-        pass
-
     @property
     def class_name(self) -> str:
         return "preprocessor"
@@ -36,14 +24,11 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
         return self._md_source
 
     @property
-    def has_index(self) -> dict:
-        return {
-            "features": True,
-            "metrics": True,
-        }
+    def load_root(self) -> str:
+        return self.config.resources
 
     @property
-    def save_path(self) -> str:
+    def save_root(self) -> str:
         return self.config.resources
 
     def __init__(
@@ -51,7 +36,6 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
             md_source: DataSource,
             features_folder: str = "filtered",
             metrics_folder: str | None = "target",
-            to_scale: list[str] | None = None,
             test_mode: bool = False,
     ):
         super().__init__(
@@ -60,7 +44,6 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
             test_mode=test_mode,
         )
         self._md_source = md_source
-        self.to_scale = to_scale if to_scale is not None else []
         self.common_datasets = list[str] | None
 
     def get_common_datasets(
@@ -72,8 +55,12 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
         metrics_datasets = self.load_metrics(suffix=metrics_suffix).index
         return list(set(features_datasets) & set(metrics_datasets))
 
-    def preprocess(self, feature_suffix: str = None, metrics_suffix: str = None) \
-            -> tuple[pd.DataFrame, pd.DataFrame]:
+    def preprocess(
+            self,
+            feature_suffix: str = None,
+            metrics_suffix: str = None,
+            to_rewrite: str = False,
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
         if (self.data_folder["features"] != self.config.preprocessed_folder
                 or self.data_folder["metrics"] != self.config.preprocessed_folder):
             self.common_datasets = self.get_common_datasets(
@@ -85,13 +72,13 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
 
         processed_features = self.handle_features(
             load_suffix=feature_suffix,
-            save_suffix=None if self.has_suffix else feature_suffix,
-            to_save=True
+            save_suffix=self.class_suffix,
+            to_rewrite=to_rewrite
         )
         processed_metrics = self.handle_metrics(
             load_suffix=metrics_suffix,
             save_suffix=metrics_suffix,
-            to_save=True
+            to_rewrite=to_rewrite
         )
 
         return processed_features, processed_metrics
@@ -101,7 +88,7 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
             processed_dataset = features_dataset.copy().loc[self.common_datasets].sort_index()
         else:
             processed_dataset = features_dataset.copy()
-        return self.__process_features__(processed_dataset=processed_dataset)
+        return self.__process_features__(features_dataset=processed_dataset)
 
     def __handle_metrics__(self, metrics_dataset: pd.DataFrame) -> tuple[pd.DataFrame, HandlerInfo]:
         if self.common_datasets is not None:
@@ -111,14 +98,25 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
         return processed_dataset, HandlerInfo()
 
     @abstractmethod
-    def __process_features__(self, processed_dataset: pd.DataFrame) -> tuple[pd.DataFrame, HandlerInfo]:
+    def __process_features__(self, features_dataset: pd.DataFrame) -> tuple[pd.DataFrame, HandlerInfo]:
         pass
 
 
 class ScalePreprocessor(MetadataPreprocessor):
+    scalers = {
+        "standard": StandardScaler,
+        "minmax": MinMaxScaler,
+        "power": PowerTransformer,
+        "quantile": QuantileTransformer
+    }
+
     @property
-    def has_suffix(self) -> bool:
-        return True
+    def class_suffix(self) -> str | None:
+        suffix = []
+        for scaler_name in self.to_scale:
+            suffix.append(scaler_name)
+        suffix = None if len(suffix) == 0 else "_".join(suffix)
+        return suffix
 
     def __init__(
             self,
@@ -135,9 +133,9 @@ class ScalePreprocessor(MetadataPreprocessor):
             md_source=md_source,
             features_folder=features_folder,
             metrics_folder=metrics_folder,
-            to_scale=to_scale,
             test_mode=test_mode,
         )
+        self.to_scale = to_scale
         self.parameters = {}
         self.perf_type = perf_type
         self.remove_outliers = remove_outliers
@@ -145,52 +143,49 @@ class ScalePreprocessor(MetadataPreprocessor):
 
     def __process_features__(
             self,
-            processed_dataset: pd.DataFrame
+            features_dataset: pd.DataFrame
     ) -> tuple[pd.DataFrame, HandlerInfo]:
         if self.remove_outliers:
-            q1 = processed_dataset.quantile(0.25, axis="index")
-            q3 = processed_dataset.quantile(0.75, axis="index")
+            q1 = features_dataset.quantile(0.25, axis="index")
+            q3 = features_dataset.quantile(0.75, axis="index")
             iqr = q3 - q1
 
             lower = q1 - self.outlier_modifier * iqr
             upper = q3 + self.outlier_modifier * iqr
 
-            for i, feature in enumerate(processed_dataset.columns):
-                feature_col = processed_dataset[feature]
+            for i, feature in enumerate(features_dataset.columns):
+                feature_col = features_dataset[feature]
                 feature_col[feature_col < lower[i]] = lower[i]
                 feature_col[feature_col > upper[i]] = upper[i]
-                processed_dataset[feature] = feature_col
+                features_dataset[feature] = feature_col
 
-        scaled_values = processed_dataset.to_numpy(copy=True)
-        suffix = []
+        scaled_values = features_dataset.to_numpy(copy=True)
+
         for scaler_name in self.to_scale:
             scaled_values = self.scalers[scaler_name]().fit_transform(X=scaled_values)
-            suffix.append(scaler_name)
-        suffix = None if len(suffix) == 0 else "_".join(suffix)
 
         res = pd.DataFrame(
             scaled_values,
-            columns=processed_dataset.columns,
-            index=processed_dataset.index
+            columns=features_dataset.columns,
+            index=features_dataset.index
         )
         remove_constant_features(res)
 
-        handler_info = HandlerInfo(suffix=suffix)
+        handler_info = HandlerInfo(suffix=self.class_suffix)
 
         return res, handler_info
 
 
 class CorrelationPreprocessor(MetadataPreprocessor):
     @property
-    def has_suffix(self) -> bool:
-        return False
+    def class_suffix(self) -> str | None:
+        return "corr"
 
     def __init__(
             self,
             md_source: DataSource,
             features_folder: str = "preprocessed",
             metrics_folder: str | None = "preprocessed",
-            to_scale: list[str] | None = None,
             corr_method: str = "spearman",
             corr_value_threshold: float = 0.9,
             vif_value_threshold: float | None = None,
@@ -201,7 +196,6 @@ class CorrelationPreprocessor(MetadataPreprocessor):
             md_source=md_source,
             features_folder=features_folder,
             metrics_folder=metrics_folder,
-            to_scale=to_scale,
             test_mode=test_mode,
         )
         self.corr_method = corr_method
@@ -211,9 +205,9 @@ class CorrelationPreprocessor(MetadataPreprocessor):
 
     def __process_features__(
             self,
-            processed_dataset: pd.DataFrame
+            features_dataset: pd.DataFrame
     ) -> tuple[pd.DataFrame, HandlerInfo]:
-        corr = processed_dataset.corr(method=self.corr_method)
+        corr = features_dataset.corr(method=self.corr_method)
         collinear_pairs = set()
 
         for i in range(len(corr.index)):
@@ -225,9 +219,9 @@ class CorrelationPreprocessor(MetadataPreprocessor):
         corr.drop(set([i[0] for i in collinear_pairs]), inplace=True, axis="columns")
 
         if self.vif_count_threshold is None and self.vif_value_threshold is None:
-            return processed_dataset.loc[:, corr.index], HandlerInfo()
+            return features_dataset.loc[:, corr.index], HandlerInfo()
 
-        sorted_vif = self.compute_vif(processed_dataset.loc[:, corr.columns])
+        sorted_vif = self.compute_vif(features_dataset.loc[:, corr.columns])
         max_iter = self.vif_count_threshold \
             if self.vif_count_threshold is not None \
             else len(sorted_vif.index)
@@ -236,9 +230,9 @@ class CorrelationPreprocessor(MetadataPreprocessor):
             vif_max = sorted_vif.max()["VIF"]
             if self.vif_value_threshold is not None and vif_max < self.vif_value_threshold:
                 break
-            sorted_vif = self.compute_vif(processed_dataset.loc[:, sorted_vif.index[1:]])
+            sorted_vif = self.compute_vif(features_dataset.loc[:, sorted_vif.index[1:]])
 
-        return processed_dataset.loc[:, sorted_vif.index], HandlerInfo()
+        return features_dataset.loc[:, sorted_vif.index], HandlerInfo()
 
 
     @staticmethod

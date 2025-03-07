@@ -1,15 +1,13 @@
-import json
-import os
 from abc import abstractmethod, ABC
 from pathlib import Path
 
 import pandas as pd
 
 from ms.config.navigation_config import NavigationConfig
-from ms.handler.handler_info import HandlerInfo
 from ms.handler.data_source import SourceBased
+from ms.handler.handler_info import HandlerInfo
 from ms.utils.debug import Debuggable
-from ms.utils.navigation import pjoin
+from ms.utils.navigation import load, save, get_path, rewrite_decorator
 
 
 class DataHandler(SourceBased, Debuggable, ABC):
@@ -34,6 +32,21 @@ class DataHandler(SourceBased, Debuggable, ABC):
         }
 
     @property
+    @abstractmethod
+    def class_name(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def class_folder(self) -> str:
+        pass
+
+    @property
+    @abstractmethod
+    def class_suffix(self) -> str | None:
+        pass
+
+    @property
     def config(self) -> NavigationConfig:
         return self._config
 
@@ -51,211 +64,190 @@ class DataHandler(SourceBased, Debuggable, ABC):
 
     @property
     @abstractmethod
-    def has_index(self) -> dict[str, bool]:
+    def load_root(self) -> str:
         pass
-
-    @property
-    def load_path(self) -> str:
-        return self.config.resources
 
     @property
     @abstractmethod
-    def save_path(self) -> str:
+    def save_root(self) -> str:
         pass
-
-    def load(
-            self,
-            folder_name: str,
-            file_name: str,
-            get_index: bool = True,
-            inner_folders: list[str] = None,
-            path: Path | None = None,
-    ) -> pd.DataFrame:
-        load_path = self.get_path(
-            folder_name=folder_name,
-            file_name=file_name,
-            inner_folders=inner_folders,
-            to_save=False
-        ) if path is None else path
-
-        if get_index:
-            data_frame = pd.read_csv(load_path, index_col=0)
-        else:
-            data_frame = pd.read_csv(load_path)
-
-        return data_frame
-
-    def load_json(
-            self,
-            folder_name: str,
-            file_name: str,
-            inner_folders: list[str] = None,
-            path: Path | None = None,
-            to_save: bool = False,
-    ) -> dict:
-        load_path = self.get_path(
-            folder_name=folder_name,
-            file_name=file_name,
-            inner_folders=inner_folders,
-            to_save=to_save
-        ) if path is None else path
-
-        with open(load_path, "r") as f:
-            data = json.load(f)
-        return data
-
-    def save(
-            self,
-            data_frame: pd.DataFrame,
-            folder_name: str,
-            file_name: str,
-            inner_folders: list[str] = None,
-            save_if_exists: bool = True,
-            path: Path | None = None,
-    ) -> str:
-        save_path = self.get_path(
-            folder_name=folder_name,
-            file_name=file_name,
-            inner_folders=inner_folders,
-        ) if path is None else path
-
-        if os.path.isfile(save_path) and not save_if_exists:
-            return save_path
-
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        if (data_frame.index.name is not None
-                or data_frame.index.names[0] is not None):
-            save_index = True
-        else:
-            save_index = False
-        data_frame.to_csv(
-            path_or_buf=save_path,
-            index=save_index,
-            header=True,
-        )
-        return save_path
-
-    def save_json(
-            self,
-            data: dict,
-            folder_name: str,
-            file_name: str,
-            inner_folders: list[str] = None,
-            save_if_exists: bool = True,
-            path: Path | None = None,
-    ) -> str:
-        save_path = self.get_path(
-            folder_name=folder_name,
-            file_name=file_name,
-            inner_folders=inner_folders,
-        ) if path is None else path
-
-        if os.path.isfile(save_path) and not save_if_exists:
-            return save_path
-
-        save_path.parent.mkdir(parents=True, exist_ok=True)
-        with open(save_path, "w") as f:
-            json.dump(data, f)
-
-        return save_path
 
     def get_path(
             self,
-            folder_name: str,
-            file_name: str,
-            inner_folders: list[str] = None,
-            to_save: bool = True,
+            root_type: str,
+            inner_folders: list[str],
+            prefix: str,
+            file_type: str,
+            suffix: str | None = None,
     ) -> Path:
-        path_list = [
-            self.save_path if to_save else self.load_path,
-            self.source.name,
-            folder_name,
+        if root_type == "load":
+            root_folder = self.load_root
+        elif root_type == "save":
+            root_folder = self.save_root
+        else:
+            raise ValueError("Unknown root type")
+
+        folders = [root_folder, self.source.name]
+        folders += [
+            self.get_name(name=folder) for folder in inner_folders
         ]
-        if inner_folders is not None:
-            path_list += inner_folders
-
-        return Path(pjoin(*path_list, file_name))
-
-    def load_features(self, suffix: str | None = None) -> pd.DataFrame:
-        features_dataset = self.load(
-            folder_name=self.get_name(name=self.data_folder["features"]),
-            file_name=self.get_file_name(
-                prefix=self.config.features_prefix,
-                suffix=suffix
-            ),
-            get_index=self.has_index["features"],
+        file_name = self.get_file_name(prefix=prefix, suffix=suffix)
+        path = get_path(
+            folders=folders,
+            file_name=file_name,
+            file_type=file_type
         )
-        return features_dataset
+        return path
+
+    def get_features_path(
+            self,
+            root_type: str,
+            folder: str,
+            suffix: str | None = None
+    ) -> Path:
+        return self.get_path(
+            root_type=root_type,
+            inner_folders=[folder],
+            prefix=self.config.features_prefix,
+            file_type="csv",
+            suffix=suffix
+        )
+
+    def get_metrics_path(
+            self,
+            root_type: str,
+            folder: str,
+            suffix: str | None = None
+    ) -> Path:
+        return self.get_path(
+            root_type=root_type,
+            inner_folders=[folder],
+            prefix=self.config.metrics_prefix,
+            file_type="csv",
+            suffix=suffix
+        )
+
+    def get_samples_path(
+            self,
+            root_type: str,
+            folders: list[str] | None = None,
+            sample_type: str = "slices"
+    ) -> str:
+        inner_folders = [self.config.sampler_folder]
+        if folders is not None:
+            inner_folders += folders
+        return self.get_path(
+            root_type=root_type,
+            inner_folders=inner_folders,
+            prefix=sample_type,
+            file_type="json"
+        )
+
+    def load_features(
+            self,
+            suffix: str | None = None,
+            path: Path | None = None,
+            folder: str | None = None,
+    ) -> pd.DataFrame:
+        path = self.get_features_path(
+            root_type="load",
+            folder=self.data_folder["features"] if folder is None else folder,
+            suffix=suffix,
+        ) if path is None else path
+        df = load(
+            path=path,
+            file_type="csv",
+        )
+        if df.columns[0] == self.config.dataset_name:
+            df.set_index(self.config.dataset_name, drop=True, inplace=True)
+        return df
 
     def save_features(
             self,
-            features_handled: pd.DataFrame,
+            features: pd.DataFrame,
             suffix: str | None = None,
-    ) -> str:
-        return self.save(
-            data_frame=features_handled,
-            folder_name=self.get_name(name=self.class_folder),
-            file_name=self.get_file_name(
-                prefix=self.config.features_prefix,
-                suffix=suffix
-            ),
+            path: Path | None = None,
+            folder: str | None = None,
+    ) -> None:
+        path = self.get_features_path(
+            root_type="save",
+            folder=self.data_folder["features"] if folder is None else folder,
+            suffix=suffix,
+        ) if path is None else path
+        save(
+            data=features,
+            path=path,
+            file_type="csv",
         )
 
-    def load_metrics(self, suffix: str | None = None) -> pd.DataFrame:
-        metrics_dataset = self.load(
-            folder_name=self.get_name(name=self.data_folder["metrics"]),
-            file_name=self.get_file_name(
-                prefix=self.config.metrics_prefix,
-                suffix=suffix
-            ),
-            get_index=self.has_index["metrics"],
+    def load_metrics(
+            self,
+            suffix: str | None = None,
+            path: Path | None = None,
+    ) -> pd.DataFrame:
+        path = self.get_metrics_path(
+            root_type="load",
+            folder=self.data_folder["metrics"],
+            suffix=suffix,
+        ) if path is None else path
+        df = load(
+            path=path,
+            file_type="csv",
         )
-        return metrics_dataset
+        if df.columns[0] == self.config.dataset_name:
+            df.set_index(self.config.dataset_name, drop=True, inplace=True)
+        return df
 
     def save_metrics(
             self,
-            metrics_handled: pd.DataFrame,
-            suffix: str | None = None
-    ) -> str:
-        return self.save(
-            data_frame=metrics_handled,
-            folder_name=self.get_name(name=self.class_folder),
-            file_name=self.get_file_name(
-                prefix=self.config.metrics_prefix,
-                suffix=suffix
-            ),
-        )
-
-    def save_samples(
-            self,
-            data: dict,
-            file_name: str,
-            inner_folders: list[str] | None = None,
-    ) -> str:
-        return self.save_json(
-            data=data,
-            folder_name=self.config.sampler_folder,
-            file_name=f"{file_name}.json",
-            inner_folders=inner_folders,
+            metrics: pd.DataFrame,
+            suffix: str | None = None,
+            path: Path | None = None,
+    ) -> None:
+        path = self.get_metrics_path(
+            root_type="save",
+            folder=self.data_folder["metrics"],
+            suffix=suffix,
+        ) if path is None else path
+        save(
+            data=metrics,
+            path=path,
+            file_type="csv",
         )
 
     def load_samples(
             self,
-            file_name: str,
-            inner_folders: list[str] | None = None,
+            folders: list[str],
+            sample_type: str = "slices", # or splits
+            path: Path | None = None,
     ) -> dict:
-        return self.load_json(
-            folder_name=self.config.sampler_folder,
-            file_name=f"{file_name}.json",
-            inner_folders=inner_folders,
-        )
+        json_path = self.get_samples_path(
+            root_type="load",
+            folders=folders,
+            sample_type=sample_type,
+        ) if path is None else path
+        return load(path=json_path, file_type="json")
+
+    def save_samples(
+            self,
+            samples: dict,
+            sample_type: str = "slices", # or splits
+            folders: list[str] | None = None,
+            path: Path | None = None,
+    ) -> dict:
+        json_path = self.get_samples_path(
+            root_type="save",
+            folders=folders,
+            sample_type=sample_type,
+        ) if path is None else path
+        return save(data=samples, path=json_path, file_type="json")
 
     @staticmethod
     def get_file_name(prefix: str, suffix: str | None = None):
         if suffix is not None:
-            res = f"{prefix}__{suffix}.csv"
+            res = f"{prefix}__{suffix}"
         else:
-            res = f"{prefix}.csv"
+            res = f"{prefix}"
         return res
 
 
@@ -264,17 +256,40 @@ class FeaturesHandler(DataHandler):
             self,
             load_suffix: str | None = None,
             save_suffix: str | None = None,
-            to_save: bool = True
+            to_rewrite: bool = False,
     ) -> pd.DataFrame:
-        features_dataset = self.load_features(suffix=load_suffix)
+        load_path = self.get_features_path(
+            root_type="load",
+            folder=self.data_folder["features"],
+            suffix=load_suffix,
+        )
+        save_path = self.get_features_path(
+            root_type="save",
+            folder=self.class_folder,
+            suffix=save_suffix if save_suffix is not None
+            else self.class_suffix
+        )
+        return self.wrap_features(
+            load_path=load_path,
+            save_path=save_path,
+            to_rewrite=to_rewrite,
+        )
+
+    @rewrite_decorator
+    def wrap_features(
+            self,
+            load_path: Path,
+            save_path: Path,
+    ) -> pd.DataFrame:
+        features_dataset = self.load_features(path=load_path)
         features_handled, handler_info = self.__handle_features__(
             features_dataset=features_dataset
         )
-        if to_save:
-            self.save_features(
-                features_handled=features_handled,
-                suffix=handler_info.info["suffix"] if save_suffix is None else save_suffix,
-            )
+        save(
+            data=features_handled,
+            path=save_path,
+            file_type="csv"
+        )
         return features_handled
 
     @abstractmethod
@@ -286,17 +301,40 @@ class MetricsHandler(DataHandler):
             self,
             load_suffix: str | None = None,
             save_suffix: str | None = None,
-            to_save: bool = True
+            to_rewrite: bool = False,
     ) -> pd.DataFrame:
-        metrics_dataset = self.load_metrics(suffix=load_suffix)
+        load_path = self.get_metrics_path(
+            root_type="load",
+            folder=self.data_folder["metrics"],
+            suffix=load_suffix,
+        )
+        save_path = self.get_metrics_path(
+            root_type="save",
+            folder=self.class_folder,
+            suffix=save_suffix if save_suffix is not None
+            else self.class_suffix
+        )
+        return self.wrap_metrics(
+            load_path=load_path,
+            save_path=save_path,
+            to_rewrite=to_rewrite,
+        )
+
+    @rewrite_decorator
+    def wrap_metrics(
+            self,
+            load_path: Path,
+            save_path: Path,
+    ) -> pd.DataFrame:
+        metrics_dataset = self.load_metrics(path=load_path)
         metrics_handled, handler_info = self.__handle_metrics__(
             metrics_dataset=metrics_dataset
         )
-        if to_save:
-            self.save_metrics(
-                metrics_handled=metrics_handled,
-                suffix=handler_info.info["suffix"] if save_suffix is None else save_suffix,
-            )
+        save(
+            data=metrics_handled,
+            path=save_path,
+            file_type="csv"
+        )
         return metrics_handled
 
     @abstractmethod
