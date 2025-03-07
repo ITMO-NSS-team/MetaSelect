@@ -80,8 +80,13 @@ class DataHandler(SourceBased, Debuggable, ABC):
             file_type: str,
             suffix: str | None = None,
     ) -> Path:
-        root_folder = self.load_root if root_type == "load" \
-            else self.save_root
+        if root_type == "load":
+            root_folder = self.load_root
+        elif root_type == "save":
+            root_folder = self.save_root
+        else:
+            raise ValueError("Unknown root type")
+
         folders = [root_folder, self.source.name]
         folders += [
             self.get_name(name=folder) for folder in inner_folders
@@ -122,14 +127,31 @@ class DataHandler(SourceBased, Debuggable, ABC):
             suffix=suffix
         )
 
+    def get_samples_path(
+            self,
+            root_type: str,
+            folders: list[str] | None = None,
+            sample_type: str = "slices"
+    ) -> str:
+        inner_folders = [self.config.sampler_folder]
+        if folders is not None:
+            inner_folders += folders
+        return self.get_path(
+            root_type=root_type,
+            inner_folders=inner_folders,
+            prefix=sample_type,
+            file_type="json"
+        )
+
     def load_features(
             self,
             suffix: str | None = None,
             path: Path | None = None,
+            folder: str | None = None,
     ) -> pd.DataFrame:
         path = self.get_features_path(
             root_type="load",
-            folder=self.data_folder["features"],
+            folder=self.data_folder["features"] if folder is None else folder,
             suffix=suffix,
         ) if path is None else path
         df = load(
@@ -139,6 +161,24 @@ class DataHandler(SourceBased, Debuggable, ABC):
         if df.columns[0] == self.config.dataset_name:
             df.set_index(self.config.dataset_name, drop=True, inplace=True)
         return df
+
+    def save_features(
+            self,
+            features: pd.DataFrame,
+            suffix: str | None = None,
+            path: Path | None = None,
+            folder: str | None = None,
+    ) -> None:
+        path = self.get_features_path(
+            root_type="save",
+            folder=self.data_folder["features"] if folder is None else folder,
+            suffix=suffix,
+        ) if path is None else path
+        save(
+            data=features,
+            path=path,
+            file_type="csv",
+        )
 
     def load_metrics(
             self,
@@ -157,6 +197,50 @@ class DataHandler(SourceBased, Debuggable, ABC):
         if df.columns[0] == self.config.dataset_name:
             df.set_index(self.config.dataset_name, drop=True, inplace=True)
         return df
+
+    def save_metrics(
+            self,
+            metrics: pd.DataFrame,
+            suffix: str | None = None,
+            path: Path | None = None,
+    ) -> None:
+        path = self.get_metrics_path(
+            root_type="save",
+            folder=self.data_folder["metrics"],
+            suffix=suffix,
+        ) if path is None else path
+        save(
+            data=metrics,
+            path=path,
+            file_type="csv",
+        )
+
+    def load_samples(
+            self,
+            folders: list[str],
+            sample_type: str = "slices", # or splits
+            path: Path | None = None,
+    ) -> dict:
+        json_path = self.get_samples_path(
+            root_type="load",
+            folders=folders,
+            sample_type=sample_type,
+        ) if path is None else path
+        return load(path=json_path, file_type="json")
+
+    def save_samples(
+            self,
+            samples: dict,
+            sample_type: str = "slices", # or splits
+            folders: list[str] | None = None,
+            path: Path | None = None,
+    ) -> dict:
+        json_path = self.get_samples_path(
+            root_type="save",
+            folders=folders,
+            sample_type=sample_type,
+        ) if path is None else path
+        return save(data=samples, path=json_path, file_type="json")
 
     @staticmethod
     def get_file_name(prefix: str, suffix: str | None = None):

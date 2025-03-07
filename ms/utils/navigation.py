@@ -1,4 +1,5 @@
 import json
+import os
 from abc import ABC, abstractmethod
 from os.path import join as pjoin
 from pathlib import Path
@@ -108,6 +109,7 @@ def rewrite_decorator(func):
     ):
         if not to_rewrite and save_path.exists():
             return
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
         return func(
             self,
             save_path=save_path,

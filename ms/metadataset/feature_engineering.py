@@ -8,6 +8,10 @@ from ms.utils.typing import NDArrayFloatT
 
 
 class FeatureCrafter(DataHandler):
+    @property
+    def class_suffix(self) -> str | None:
+        return None
+
     distribution = {
         "normal": np.random.normal,
         "uniform": np.random.uniform,
@@ -22,13 +26,6 @@ class FeatureCrafter(DataHandler):
     @property
     def class_name(self) -> str:
         return "crafter"
-
-    @property
-    def has_index(self) -> dict:
-        return {
-            "features": True,
-            "metrics": True,
-        }
 
     @property
     def save_root(self) -> str:
@@ -65,9 +62,9 @@ class FeatureCrafter(DataHandler):
             dist_name: str = "normal",
             corrupt_coeff: float = 0.5,
     ) -> None:
-        processed_dataset = self.load(
-            folder_name="preprocessed",
-            file_name=self.get_file_name(self.config.features_prefix, features_suffix),
+        processed_dataset = self.load_features(
+            suffix=features_suffix,
+            folder=self.config.preprocessed_folder,
         )
         cols = list(processed_dataset.columns)
         rows = list(processed_dataset.index)
@@ -111,7 +108,11 @@ class FeatureCrafter(DataHandler):
             if percent is not None:
                 save_suffix += f"{names[i]}"
 
-        self.save_features(changed_dataset, save_suffix)
+        self.save_features(
+            features=changed_dataset,
+            suffix=save_suffix,
+            folder=self.config.preprocessed_folder
+        )
 
     def add_random_feature(
             self,

@@ -88,7 +88,7 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
             processed_dataset = features_dataset.copy().loc[self.common_datasets].sort_index()
         else:
             processed_dataset = features_dataset.copy()
-        return self.__process_features__(features_dataset=processed_dataset), HandlerInfo()
+        return self.__process_features__(features_dataset=processed_dataset)
 
     def __handle_metrics__(self, metrics_dataset: pd.DataFrame) -> tuple[pd.DataFrame, HandlerInfo]:
         if self.common_datasets is not None:

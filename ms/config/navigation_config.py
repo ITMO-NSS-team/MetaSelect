@@ -27,6 +27,8 @@ class NavigationConfig:
     model_free_folder: str = "model_free"
     ml_folder: str = "ml"
 
+    selection_data: str = "selection_data"
+
     features_prefix: str = "features"
     metrics_prefix: str = "metrics"
     results_prefix: str = "results"
