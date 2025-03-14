@@ -15,19 +15,6 @@ f_sampler = DataSampler(
         test_mode=False
     )
 
-meta_learner = MetaLearner(
-        md_source=md_source,
-        opt_scoring=grid_scoring,
-        model_scoring=model_scoring,
-        features_folder="preprocessed",
-        metrics_folder="preprocessed",
-        opt_method=None,
-        opt_cv=5,
-        model_cv=10,
-        n_trials=50,
-        test_mode=False,
-    )
-
 selectors_to_use = ["base", "corr", "f_val", "mi", "xgb", "lasso", "rfe", "te", "cf"]
 selectors = [all_handlers[selector][1] for selector in selectors_to_use if selector != "rfe"]
 metrics_suffixes = ["perf_abs", "perf_rel", "diff"]

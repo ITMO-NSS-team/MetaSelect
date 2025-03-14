@@ -122,8 +122,8 @@ meta_learner = MetaLearner(
         features_folder="preprocessed",
         metrics_folder="preprocessed",
         opt_method=None,
-        opt_cv=5,
-        model_cv=10,
-        n_trials=50,
+        # opt_cv=5,
+        # model_cv=10,
+        # n_trials=50,
         test_mode=False,
 )
