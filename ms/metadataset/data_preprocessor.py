@@ -95,10 +95,14 @@ class MetadataPreprocessor(FeaturesHandler, MetricsHandler, ABC):
             processed_dataset = metrics_dataset.copy().loc[self.common_datasets].sort_index()
         else:
             processed_dataset = metrics_dataset.copy()
-        return processed_dataset, HandlerInfo()
+        return self.__process_metrics__(metrics_dataset=processed_dataset)
 
     @abstractmethod
     def __process_features__(self, features_dataset: pd.DataFrame) -> tuple[pd.DataFrame, HandlerInfo]:
+        pass
+
+    @abstractmethod
+    def __process_metrics__(self, metrics_dataset: pd.DataFrame) -> tuple[pd.DataFrame, HandlerInfo]:
         pass
 
 
@@ -175,6 +179,25 @@ class ScalePreprocessor(MetadataPreprocessor):
 
         return res, handler_info
 
+    def __process_metrics__(
+            self,
+            metrics_dataset: pd.DataFrame
+    ) -> tuple[pd.DataFrame, HandlerInfo]:
+        scaled_values = metrics_dataset.to_numpy(copy=True)
+
+        for scaler_name in self.to_scale:
+            scaled_values = self.scalers[scaler_name]().fit_transform(X=scaled_values)
+
+        res = pd.DataFrame(
+            scaled_values,
+            columns=metrics_dataset.columns,
+            index=metrics_dataset.index
+        )
+
+        handler_info = HandlerInfo(suffix=self.class_suffix)
+
+        return res, handler_info
+
 
 class CorrelationPreprocessor(MetadataPreprocessor):
     @property
@@ -234,6 +257,11 @@ class CorrelationPreprocessor(MetadataPreprocessor):
 
         return features_dataset.loc[:, sorted_vif.index], HandlerInfo()
 
+    def __process_metrics__(
+            self,
+            metrics_dataset: pd.DataFrame
+    ) -> tuple[pd.DataFrame, HandlerInfo]:
+        return metrics_dataset
 
     @staticmethod
     def compute_vif(dataset: pd.DataFrame) -> pd.DataFrame:
