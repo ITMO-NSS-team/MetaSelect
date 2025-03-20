@@ -79,7 +79,7 @@ class MetaLearner(DataHandler):
             init_num: int | None = None,
             iter_num: int | None = None,
             fold_num: int | None = None,
-    ) -> pd.DataFrame:
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
         features = selector.select(
             features_suffix=features_suffix,
             metrics_suffix=metrics_suffix,
@@ -88,9 +88,9 @@ class MetaLearner(DataHandler):
             fold_num=fold_num,
             target_model=target_model,
         )
-        metrics = self.load_metrics(suffix=metrics_suffix)
+        metrics = self.load_metrics(suffix=metrics_suffix).loc[:, target_model]
 
-        return features, metrics
+        return features, metrics.to_frame(name=target_model)
 
     def run_models(
             self,
