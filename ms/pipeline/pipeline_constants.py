@@ -12,6 +12,7 @@ from ms.metaresearch.selectors.base import BaseSelector
 from ms.metaresearch.selectors.causal import TESelector, CFSelector
 from ms.metaresearch.selectors.model_based import XGBSelector, LassoSelector
 from ms.metaresearch.selectors.model_free import CorrelationSelector, FValueSelector, MutualInfoSelector
+from ms.metaresearch.selectors.model_wrapper import RFESelector
 
 seed = 42
 
@@ -122,8 +123,15 @@ meta_learner = MetaLearner(
         features_folder="preprocessed",
         metrics_folder="preprocessed",
         opt_method=None,
-        opt_cv=5,
-        model_cv=10,
-        n_trials=50,
+        # opt_cv=5,
+        # model_cv=10,
+        # n_trials=50,
         test_mode=False,
 )
+
+rfe_selectors = {
+    # "rfe_knn": RFESelector(md_source=TabzillaSource, model=knn_mm),
+    "rfe_xgb": RFESelector(md_source=TabzillaSource, model=xgb_mm),
+    "rfe_mlp": RFESelector(md_source=TabzillaSource, model=mlp_mm),
+    "rfe_lr": RFESelector(md_source=TabzillaSource, model=lr_mm),
+}

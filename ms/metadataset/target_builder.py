@@ -228,7 +228,7 @@ class TargetDiffBuilder(TargetBuilder):
 
         diff_df = pd.DataFrame(index=metrics_dataset.index)
         res = metrics_dataset[models[0]] - metrics_dataset[models[1]]
-        diff_df[f"diff__{models[0]}__{models[1]}"] \
+        diff_df[f"{models[0]}__{models[1]}"] \
             = [0 if r > 0 else 1 for r in res]
 
         self._col_name = diff_df.columns[0]

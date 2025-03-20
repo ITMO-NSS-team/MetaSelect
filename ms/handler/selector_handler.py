@@ -104,6 +104,52 @@ class SelectorHandler(DataHandler, ABC):
             features=load(path=json_path, file_type="json")
         )
 
+    def load_data(
+            self,
+            features_suffix: str,
+            metrics_suffix: str,
+    ) -> SelectorData:
+        json_path = self.get_path(
+            root_type="save",
+            inner_folders=[
+                features_suffix,
+                self.class_folder,
+                "selection_data"
+            ],
+            prefix=metrics_suffix,
+            file_type="json",
+        )
+
+        return SelectorData(
+            name=self.class_folder,
+            features_suffix=features_suffix,
+            metrics_suffix=metrics_suffix,
+            features=load(
+                path=json_path,
+                file_type="json"
+            )
+        )
+
+    def select(
+            self,
+            features_suffix: str,
+            metrics_suffix: str,
+            target_model: str,
+            init_num: int | None = None,
+            iter_num: int | None = None,
+            fold_num: int | None = None,
+    ) -> pd.DataFrame:
+        data = self.load_data(
+            features_suffix=features_suffix,
+            metrics_suffix=metrics_suffix
+        )
+        init_features = self.load_features(suffix=features_suffix)
+        init_num = init_num if init_num is not None else init_features.shape[1]
+        iter_num = iter_num if iter_num is not None else 0
+        fold_num = fold_num if fold_num is not None else 0
+        new_features = data.features[str(init_num)][str(iter_num)][str(fold_num)][target_model]
+
+        return init_features.loc[:, new_features]
 
     @rewrite_decorator
     def run_selectors(
@@ -135,7 +181,7 @@ class SelectorHandler(DataHandler, ABC):
                         metrics_suffix
                     ],
                     prefix=f_slice,
-                    file_type="json",
+                    file_type="csv",
                 )
             )
             if not to_rewrite and res_path.exists():
@@ -164,11 +210,16 @@ class SelectorHandler(DataHandler, ABC):
                     )
                     results[f_slice][n_iter][fold] = {}
                     for k, target_model in enumerate(target_models):
-                        selected_features = df.iloc[:, k].dropna(how="any").index.tolist()
+                        selected_features = (df.iloc[:, k]
+                                             .dropna(how="any")
+                                             .sort_values(ascending=False, key=abs)
+                                             .index
+                                             .tolist()
+                                             )
                         if len(selected_features) == 0:
                             errors[f"{f_slice}_{n_iter}_{fold}_{target_model}"] = 0
                         results[f_slice][n_iter][fold][target_model] = selected_features
-                    df.columns = [f"{col}_{n_iter}" for col in df.columns]
+                    df.columns = [f"{col}__{n_iter}__{fold}" for col in df.columns]
                     res_list.append(df)
             res_df = pd.concat(res_list, axis=1)
             save(
@@ -228,7 +279,7 @@ class SelectorHandler(DataHandler, ABC):
                 y=y[:, i],
                 features_names=features_names,
             )
-            model_df.columns = [f"{i}_{model_name}" for i in model_df.columns]
+            model_df.columns = [f"{model_name}__{i}" for i in model_df.columns]
             res_df = pd.concat([res_df, model_df], axis=1)
         res_df.dropna(axis="index", how="all", inplace=True)
         return res_df

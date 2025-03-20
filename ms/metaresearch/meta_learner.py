@@ -5,6 +5,7 @@ import pandas as pd
 
 from ms.handler.data_handler import DataHandler
 from ms.handler.data_source import DataSource
+from ms.handler.selector_handler import SelectorHandler
 from ms.metaresearch.meta_model import MetaModel
 from ms.metaresearch.selector_data import SelectorData
 from ms.metaresearch.selectors.model_wrapper import RFESelector
@@ -68,6 +69,28 @@ class MetaLearner(DataHandler):
         self.opt_cv = opt_cv
         self.model_cv = model_cv
         self.n_trials = n_trials
+
+    def load_data(
+            self,
+            features_suffix: str,
+            metrics_suffix: str,
+            target_model: str,
+            selector: SelectorHandler,
+            init_num: int | None = None,
+            iter_num: int | None = None,
+            fold_num: int | None = None,
+    ) -> tuple[pd.DataFrame, pd.DataFrame]:
+        features = selector.select(
+            features_suffix=features_suffix,
+            metrics_suffix=metrics_suffix,
+            init_num=init_num,
+            iter_num=iter_num,
+            fold_num=fold_num,
+            target_model=target_model,
+        )
+        metrics = self.load_metrics(suffix=metrics_suffix).loc[:, target_model]
+
+        return features, metrics.to_frame(name=target_model)
 
     def run_models(
             self,
