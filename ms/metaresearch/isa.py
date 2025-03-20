@@ -23,7 +23,7 @@ class PILOTResult:
     z: NDArrayFloatT
     error: NDArrayFloatT
     r2: NDArrayFloatT
-    summary: NDArrayFloatT
+    summary: pd.DataFrame
 
 
 class InstanceSpaceAnalysis:
@@ -73,8 +73,6 @@ class InstanceSpaceAnalysis:
         print("Computing z1, z2")
 
         idx = np.argmax(perf)
-        print(alpha.shape)
-        print(alpha[:2 * n, idx].shape)
 
         a = np.reshape(alpha[:2 * n, idx], (2, n))
         z = np.dot(x, a.T)
@@ -85,10 +83,11 @@ class InstanceSpaceAnalysis:
         error = np.sum((x_bar - x_hat) ** 2)
         r2 = np.diag(np.corrcoef(x_bar.T, x_hat.T)[0, 1:]) ** 2
 
-        summary = np.zeros((3, n + 1), dtype=object)
-        summary[0, 1:] = features.columns
-        summary[1:, 0] = ['z1', 'z2']
-        summary[1:, 1:] = np.round(a, 4)
+        summary = pd.DataFrame(
+            data=np.round(a, 4).T,
+            columns=["z1", "z2"],
+            index=features.columns
+        )
 
         return PILOTResult(
             x_bar=x_bar,
