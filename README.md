@@ -65,3 +65,16 @@ These algorithms are responsible for extracting meta-features from datasets, whi
 ### Conclusion
 Overall, the algorithms in the MetaSelect codebase work together to enhance the efficiency and effectiveness of machine learning models. By focusing on feature selection, causal relationships, and meta-feature extraction, they contribute to a more streamlined and informed learning process, ultimately leading to improved model performance in various applications.
 
+## Citation
+
+```bibtex
+@inproceedings{deeva2025select,
+  title={To select or not to select? The role of meta-features selection in meta-learning tasks with tabular data},
+  author={Deeva, Irina and Kropacheva, Alena},
+  booktitle={International Conference on Computational Science},
+  pages={294--308},
+  year={2025},
+  organization={Springer}
+}
+```
+
